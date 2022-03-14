@@ -1,8 +1,44 @@
 {
     "translations": {
         "de": {
-            "Translation 1": "Übersetzung 1",
-            "Translation 2": "Übersetzung 2"
+			"Warema WebControl configurator": "Warema WebControl Konfigurator",
+
+			"Instance has no active parent instance": "Instanz hat keine aktive übergeordnete Instanz",
+
+			"Information": "Information",
+
+			"Category": "Kategorie",
+			"Instance": "Instanz",
+			"Variable": "Variable",
+			"Script": "Skript",
+			"Event": "Ereignis",
+			"Medium": "Medium",
+			"Link": "Verknüpfung",
+			"PHP script": "PHP-Skript",
+			"Flow plan": "Ablaufplan",
+			"Triggered event": "Ausgelöstes Ereignis",
+			"Cyclic event": "Zyklisches Ereignis",
+			"Scheduled event": "Geplantes Ereignis",
+			"References": "Referenzen",
+			"by instance used objects": "durch die Instanz verwendete Objekte",
+			"Objects using the instance": "Objekte, die die Instanz verwenden",
+			"Referenced statusvariables": "referenzierte Statusvariablen",
+			"Ident": "Ident",
+			"Object": "Objekt",
+			"Area": "Bereich",
+			"Name": "Bezeichnung",
+			"Open object": "Objekt öffnen",
+
+			"Instance getting created": "Instanz wird erstellt",
+			"Instance is active": "Instanz ist aktiv",
+			"Instance is deleted": "Instanz wird gelöscht",
+			"Instance is inactive": "Instanz ist inaktiv",
+			"Instance is not created": "Instanz wurde nicht erzeugt",
+
+			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)",
+			"Instance is inactive (server error)": "Instanz ist inaktiv (Serverfehler)",
+			"Instance is inactive (http error)": "Instanz ist inaktiv (HTTP-Fehler)",
+			"Instance is inactive (invalid data)": "Instanz ist inaktiv (ungültige Daten)"
         }
     }
 }
