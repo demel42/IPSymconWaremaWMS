@@ -1,9 +1,9 @@
 {
     "id": "{6A9BBD57-8473-682D-4ABF-009AE8584B2B}",
-    "name": "WaremaWebControlIO",
+    "name": "Warema WebControl IO",
     "type": 1,
     "vendor": "Warema",
-    "aliases": [],
+    "aliases": [ "Warema WebControl I/O" ],
     "parentRequirements": [],
     "childRequirements": [
         "{B78E405B-23E3-10A5-4B26-F24277883F96}"

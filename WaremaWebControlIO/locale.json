@@ -5,6 +5,48 @@
 
             "Disable instance": "Instanz deaktivieren",
 
+			"Hostname of WebControl": "Hostname des WebControl",
+
+			"Warema WebControl configuration": "Warema WebControl Konfiguration",
+			"Language": "Sprache",
+			"unknown language": "unbekannte Sprache",
+			"unknown product": "unbekanntes Produkt",
+			"Devices": "Geräte",
+			"no configured devices": "keine eingerichteten Geräte",
+			"access failed": "Zugriff fehlgeschlagen",
+
+			"German": "Deutsch",
+			"English": "Englisch",
+			"French": "Französisch",
+			"Norwegian": "Norwegisch",
+			"Swedish": "Schwedisch",
+			"Italian": "Italienisch",
+			"Spanish": "Spanisch",
+
+			"Awning": "Markise",
+            "Awning with windsensor": "Markise mit Windmesser",
+
+			"Host must be specified": "Host muss angegeben werden",
+			"The following points of the configuration are incorrect":
+                "Die folgenden Punkte der Konfiguration sind fehlerhaft",
+
+			"Test access": "Zugriff prüfen",
+
+            "Test area": "Test-Bereich",
+
+			"Decode element \"protocol\" of url": "Dekodierung des URL-Elements \"protocol\"",
+			"Decode": "dekodieren",
+			"String": "Zeichenkette",
+			"Element \"protocol\"": "Element \"protocol\"",
+			"Structure": "Aufbau",
+			"Command header": "Kommando-Startzeichen",
+			"Command counter": "Kommando-Zähler",
+			"Payload length": "Nutzdaten-Länge",
+			"Payload": "Nutzdaten",
+
+            "Expert area": "Experten-Bereich",
+			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
+
 			"Information": "Information",
 
 			"Category": "Kategorie",

@@ -13,6 +13,55 @@ trait WaremaWebControlLocalLib
     public static $STATUS_VALID = 1;
     public static $STATUS_RETRYABLE = 2;
 
+    private static $LANG_DE = 0;
+    private static $LANG_EN = 1;
+    private static $LANG_FR = 2;
+    private static $LANG_NO = 3;
+    private static $LANG_SE = 4;
+    private static $LANG_IT = 5;
+    private static $LANG_ES = 6;
+
+    private static $PRODUCT_RAFFSTORE = 0;
+    private static $PRODUCT_JALOUSIE_INNEN = 1;
+    private static $PRODUCT_ROLLLADEN = 2;
+    private static $PRODUCT_MARKISE = 3;
+    private static $PRODUCT_MARKISE_1_VOLANT = 4;
+    private static $PRODUCT_MARKISE_INT_WIND = 5;
+    private static $PRODUCT_MARKISE_1_VOLANT_INT_WIND = 6;
+    private static $PRODUCT_WINTERGARTEN_MARKISE = 7;
+    private static $PRODUCT_FASSADEN_MARKISE = 8;
+    private static $PRODUCT_FALLARM_MARKISE = 9;
+    private static $PRODUCT_SENKRECHT_MARKISE = 10;
+    private static $PRODUCT_MARKISOLETTE = 11;
+    private static $PRODUCT_FALTSTORE_INNEN = 12;
+    private static $PRODUCT_ROLLO_INNEN = 13;
+    private static $PRODUCT_VERTIKAL_JALOUSIE_INNEN = 14;
+    private static $PRODUCT_FENSTER = 15;
+    private static $PRODUCT_LICHT_SCHALTEN = 16;
+    private static $PRODUCT_LAST_SCHALTEN = 17;
+    private static $PRODUCT_LICHT_DIMMEN = 18;
+    private static $PRODUCT_LAST_DIMMEN = 19;
+    private static $PRODUCT_STECKDOSE_SCHALTEN = 20;
+    private static $PRODUCT_VOLANT = 21;
+    private static $PRODUCT_MARKISE_2_VOLANT = 22;
+    private static $PRODUCT_MARKISE_2_VOLANT_INT_WIND = 23;
+    private static $PRODUCT_SONNENSEGEL = 24;
+    private static $PRODUCT_PERGOLAMARISE = 25;
+    private static $PRODUCT_LED_DIMMER = 26;
+
+    /*
+        private static $BEDIENTYP_LICHT1 = 0;
+        private static $BEDIENTYP_FENSTER = 1;
+        private static $BEDIENTYP_RAFFSTORE = 2;
+        private static $BEDIENTYP_ROLLLADEN = 3;
+        private static $BEDIENTYP_MARKISE = 4;
+        private static $BEDIENTYP_VOLANTMARKISE = 5;
+        private static $BEDIENTYP_LICHT2 = 6;
+        private static $BEDIENTYP_LICHT3 = 7;
+        private static $BEDIENTYP_TOTMANN = 8;
+        private static $BEDIENTYP_LAST = 9;
+     */
+
     private function GetFormStatus()
     {
         $formStatus = [];
@@ -47,5 +96,81 @@ trait WaremaWebControlLocalLib
         }
 
         return $class;
+    }
+
+    public function InstallVarProfiles(bool $reInstall = false)
+    {
+        if ($reInstall) {
+            $this->SendDebug(__FUNCTION__, 'reInstall=' . $this->bool2str($reInstall), 0);
+        }
+    }
+
+    private function LangMapping()
+    {
+        return [
+            self::$LANG_DE => 'German',
+            self::$LANG_EN => 'English',
+            self::$LANG_FR => 'French',
+            self::$LANG_NO => 'Norwegian',
+            self::$LANG_SE => 'Swedish',
+            self::$LANG_IT => 'Italian',
+            self::$LANG_ES => 'Spanish',
+        ];
+    }
+
+    private function LangAsOptions()
+    {
+        $maps = $this->LangMapping();
+        $opts = [];
+        foreach ($maps as $u => $e) {
+            $opts[] = [
+                'caption' => $e,
+                'value'   => $u,
+            ];
+        }
+        return $opts;
+    }
+
+    private function DecodeLang($lang)
+    {
+        $langMap = $this->LangMapping();
+        if (isset($langMap[$lang])) {
+            $s = $this->Translate($langMap[$lang]);
+        } else {
+            $s = $this->Translate('unknown language') . ' ' . $lang;
+        }
+        return $s;
+    }
+
+    private function ProductMapping()
+    {
+        return [
+            self::$PRODUCT_MARKISE          => 'Awning',
+            self::$PRODUCT_MARKISE_INT_WIND => 'Awning with windsensor',
+        ];
+    }
+
+    private function ProductAsOptions()
+    {
+        $maps = $this->ProductMapping();
+        $opts = [];
+        foreach ($maps as $u => $e) {
+            $opts[] = [
+                'caption' => $e,
+                'value'   => $u,
+            ];
+        }
+        return $opts;
+    }
+
+    private function DecodeProduct($product)
+    {
+        $productMap = $this->ProductMapping();
+        if (isset($productMap[$product])) {
+            $s = $this->Translate($productMap[$product]);
+        } else {
+            $s = $this->Translate('unknown product') . ' ' . $product;
+        }
+        return $s;
     }
 }

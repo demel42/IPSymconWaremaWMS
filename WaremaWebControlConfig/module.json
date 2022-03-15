@@ -1,9 +1,9 @@
 {
     "id": "{657F43A7-9122-0568-5E0C-3301A6DFFAF5}",
-    "name": "WaremaWebControlConfig",
+    "name": "Warema WebControl Config",
     "type": 4,
     "vendor": "Warema",
-    "aliases": [],
+    "aliases": [ "Warema WebControl Konfigurator" ],
     "parentRequirements": [],
     "childRequirements": [],
     "implemented": [],

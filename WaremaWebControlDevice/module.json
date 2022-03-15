@@ -1,9 +1,9 @@
 {
     "id": "{DAC4B9CA-4754-8292-3B64-6A825163AB09}",
-    "name": "WaremaWebControlDevice",
+    "name": "Warema WebControl Device",
     "type": 3,
     "vendor": "Warema",
-    "aliases": [],
+    "aliases": [ "Warema WebControl Gerät" ],
     "parentRequirements": [
         "{A8C43E67-9C5C-8A22-1F46-69EC56138C81}"
     ],
