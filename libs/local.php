@@ -8,6 +8,7 @@ trait WaremaWebControlLocalLib
     public static $IS_SERVERERROR = IS_EBASE + 2;
     public static $IS_HTTPERROR = IS_EBASE + 3;
     public static $IS_INVALIDDATA = IS_EBASE + 4;
+    public static $IS_APPFAIL = IS_EBASE + 5;
 
     public static $STATUS_INVALID = 0;
     public static $STATUS_VALID = 1;
@@ -75,6 +76,7 @@ trait WaremaWebControlLocalLib
         $formStatus[] = ['code' => self::$IS_SERVERERROR, 'icon' => 'error', 'caption' => 'Instance is inactive (server error)'];
         $formStatus[] = ['code' => self::$IS_HTTPERROR, 'icon' => 'error', 'caption' => 'Instance is inactive (http error)'];
         $formStatus[] = ['code' => self::$IS_INVALIDDATA, 'icon' => 'error', 'caption' => 'Instance is inactive (invalid data)'];
+        $formStatus[] = ['code' => self::$IS_APPFAIL, 'icon' => 'error', 'caption' => 'Instance is inactive (appliance failure)'];
 
         return $formStatus;
     }
