@@ -5,15 +5,15 @@ declare(strict_types=1);
 require_once __DIR__ . '/../libs/CommonStubs/common.php'; // globale Funktionen
 require_once __DIR__ . '/../libs/local.php';  // lokale Funktionen
 
-class WaremaWebControlIO extends IPSModule
+class WaremaWMSIO extends IPSModule
 {
     use StubsCommonLib;
-    use WaremaWebControlLocalLib;
+    use WaremaWMSLocalLib;
 
     private static $TEL_RAUM_ANLEGEN = 1;
     private static $RES_RAUM_ANLEGEN = 2;
-    private static $TEL_RAUM_ABFRAGEN = 3;				// get_Devices()
-    private static $RES_RAUM_ABFRAGEN = 4;				// get_Devices()
+    private static $TEL_RAUM_ABFRAGEN = 3;				// WebControl_GetDevices()
+    private static $RES_RAUM_ABFRAGEN = 4;				// WebControl_GetDevices()
     private static $TEL_RAUMNAMEN_AENDERN = 5;
     private static $RES_RAUMNAMEN_AENDERN = 6;
     private static $TEL_RAUMREIHENFOLGE_AENDERN = 7;
@@ -22,8 +22,8 @@ class WaremaWebControlIO extends IPSModule
     private static $RES_RAUM_LOESCHEN = 10;
     private static $TEL_KANAL_ANLEGEN = 11;
     private static $RES_KANAL_ANLEGEN = 12;
-    private static $TEL_KANAL_ABFRAGEN = 13;			// get_Devices()
-    private static $RES_KANAL_ABFRAGEN = 14;			// get_Devices()
+    private static $TEL_KANAL_ABFRAGEN = 13;			// WebControl_GetDevices()
+    private static $RES_KANAL_ABFRAGEN = 14;			// WebControl_GetDevices()
     private static $TEL_KANALNAMEN_AENDERN = 15;
     private static $RES_KANALNAMEN_AENDERN = 16;
     private static $TEL_KANALREIHENFOLGE_AENDERN = 17;
@@ -44,8 +44,8 @@ class WaremaWebControlIO extends IPSModule
     private static $RES_DEF_INFRASTRUKTUR_SPEICHERN = 32;
     private static $TEL_KANALBEDIENUNG = 33;			// ??
     private static $RES_KANALBEDIENUNG = 34;
-    private static $TEL_POS_RUECKMELDUNG = 35;			// get_Position()
-    private static $RES_POS_RUECKMELDUNG = 36;			// get_Position()
+    private static $TEL_POS_RUECKMELDUNG = 35;			// WebControl_QueryPosition()
+    private static $RES_POS_RUECKMELDUNG = 36;			// WebControl_QueryPosition()
     private static $TEL_WINKEN = 37;
     private static $RES_WINKEN = 38;
     private static $TEL_PASSWORT_ABFRAGE = 39;
@@ -58,11 +58,11 @@ class WaremaWebControlIO extends IPSModule
     private static $RES_GRENZWERTE = 46;
     private static $TEL_RTC = 47;
     private static $RES_RTC = 48;
-    private static $TEL_POLLING = 49;					// get_Position()
-    private static $RES_POLLING = 50;					// get_Position()
-    private static $RES_WMS_STACK_BUSY = 51;			// get_Position()
+    private static $TEL_POLLING = 49;					// WebControl_QueryPosition()
+    private static $RES_POLLING = 50;					// WebControl_QueryPosition()
+    private static $RES_WMS_STACK_BUSY = 51;			// WebControl_QueryPosition()
     private static $RES_ERROR_MESSAGE = 52;
-    private static $TEL_SPRACHE = 61;					// get_Lang()
+    private static $TEL_SPRACHE = 61;					// WebControl_GetLanguage()
     private static $RES_SPRACHE = 62;
     private static $TEL_SET_GRENZWERTE = 63;
     private static $RES_SET_GRENZWERTE = 64;
@@ -114,7 +114,7 @@ class WaremaWebControlIO extends IPSModule
     private static $ERROR_CODE_PANID_INVALID = 43;
 
     private static $POLL_KANALBEDIENUNG = 0;
-    private static $POLL_POSITION = 1;					// get_Position()
+    private static $POLL_POSITION = 1;					// WebControl_QueryPosition()
     private static $POLL_GRENZWERTE = 2;
     private static $POLL_AKTOREN_ZUWEISEN = 3;
     private static $POLL_AUTOMATIK = 4;
@@ -129,7 +129,7 @@ class WaremaWebControlIO extends IPSModule
     private static $FC_DONT_CARE = 0;
     private static $FC_STOP = 1;
     private static $FC_SOLL_DIREKT = 2;
-    private static $FC_SOLL_SICHER = 3;					// set_Position()
+    private static $FC_SOLL_SICHER = 3;					// WebControl_SendPosition()
     private static $FC_IMPULS_WENDEN_HOCH = 4;
     private static $FC_IMPULS_WENDEN_TIEF = 5;
     private static $FC_HOCH = 6;
@@ -171,6 +171,7 @@ class WaremaWebControlIO extends IPSModule
 
         $this->RegisterPropertyBoolean('module_disable', false);
 
+        $this->RegisterPropertyInteger('interface', self::$INTERFACE_WEBCONTROL);
         $this->RegisterPropertyString('host', '');
 
         $this->RegisterAttributeInteger('command_counter', 1);
@@ -183,8 +184,9 @@ class WaremaWebControlIO extends IPSModule
         $s = '';
         $r = [];
 
+        $interface = $this->ReadPropertyInteger('interface');
         $host = $this->ReadPropertyString('host');
-        if ($host == '') {
+        if ($interface == self::$INTERFACE_WEBCONTROL && $host == '') {
             $this->SendDebug(__FUNCTION__, '"host" is needed', 0);
             $r[] = $this->Translate('Host must be specified');
         }
@@ -237,7 +239,7 @@ class WaremaWebControlIO extends IPSModule
 
         $formElements[] = [
             'type'    => 'Label',
-            'caption' => 'Warema WebControl IO'
+            'caption' => 'Warema WMS IO'
         ];
 
         @$s = $this->CheckConfiguration();
@@ -258,10 +260,20 @@ class WaremaWebControlIO extends IPSModule
         ];
 
         $formElements[] = [
-            'type'     => 'ValidationTextBox',
-            'name'     => 'host',
-            'caption'  => 'Hostname of WebControl',
+            'type'     => 'Select',
+            'options'  => $this->InterfaceAsOptions(),
+            'name'     => 'interface',
+            'caption'  => 'WMS interface'
         ];
+
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            $formElements[] = [
+                'type'     => 'ValidationTextBox',
+                'name'     => 'host',
+                'caption'  => 'Hostname of WebControl',
+            ];
+        }
 
         return $formElements;
     }
@@ -306,7 +318,7 @@ class WaremaWebControlIO extends IPSModule
                 [
                     'type'    => 'Button',
                     'caption' => 'Get position',
-                    'onClick' => 'WMS_GetPosition($id, 0, 0);'
+                    'onClick' => 'WMS_QueryPosition($id, 0, 0);'
                 ],
                 [
                     'type'    => 'RowLayout',
@@ -321,7 +333,7 @@ class WaremaWebControlIO extends IPSModule
                         [
                             'type'    => 'Button',
                             'caption' => 'Set position',
-                            'onClick' => 'WMS_SetPosition($id, 0, 0, $position);'
+                            'onClick' => 'WMS_SendPosition($id, 0, 0, $position);'
                         ],
                     ],
                 ],
@@ -333,12 +345,12 @@ class WaremaWebControlIO extends IPSModule
                 [
                     'type'    => 'Button',
                     'caption' => 'Hoch',
-                    'onClick' => 'WMS_SetHoch($id, 0, 0);'
+                    'onClick' => 'WMS_SendHigh($id, 0, 0);'
                 ],
                 [
                     'type'    => 'Button',
                     'caption' => 'Tief',
-                    'onClick' => 'WMS_SetTief($id, 0, 0);'
+                    'onClick' => 'WMS_SendLow($id, 0, 0);'
                 ],
                 [
                     'type'    => 'Button',
@@ -383,29 +395,29 @@ class WaremaWebControlIO extends IPSModule
         }
     }
 
-    public function GetPosition($room_id, $channel_id)
+    public function QueryPosition($room_id, $channel_id)
     {
-        $this->get_Position($room_id, $channel_id);
+        $this->WebControl_QueryPosition($room_id, $channel_id);
     }
 
-    public function SetPosition($room_id, $channel_id, $position)
+    public function SendPosition($room_id, $channel_id, $position)
     {
-        $this->set_Position($room_id, $channel_id, $position, 255, 255, 255);
+        $this->WebControl_SendPosition($room_id, $channel_id, $position, 255, 255, 255);
     }
 
     public function SetStop($room_id, $channel_id)
     {
-        $this->set_Stop($room_id, $channel_id);
+        $this->WebControl_SetStop($room_id, $channel_id);
     }
 
-    public function SetHoch($room_id, $channel_id)
+    public function SendHigh($room_id, $channel_id)
     {
-        $this->set_Hoch($room_id, $channel_id);
+        $this->WebControl_SendHigh($room_id, $channel_id);
     }
 
-    public function SetTief($room_id, $channel_id)
+    public function SendLow($room_id, $channel_id)
     {
-        $this->set_Tief($room_id, $channel_id);
+        $this->WebControl_SendLow($room_id, $channel_id);
     }
 
     public function DecodeProtocol($protocol)
@@ -573,15 +585,15 @@ class WaremaWebControlIO extends IPSModule
 
     public function TestAccess()
     {
-        $s = '- ' . $this->Translate('Warema WebControl configuration') . ' -' . PHP_EOL;
+        $s = '- ' . $this->Translate('Warema WMS WebControl configuration') . ' -' . PHP_EOL;
         $s .= PHP_EOL;
 
-        $lang = $this->get_Lang();
+        $lang = $this->WebControl_GetLanguage();
         if ($lang != -1) {
             $s .= $this->Translate('Language') . ': ' . $this->DecodeLang($lang) . PHP_EOL;
 
             $s .= $this->Translate('Devices') . ': ' . PHP_EOL;
-            $devices = $this->get_Devices();
+            $devices = $this->WebControl_GetDevices();
             if (count($devices)) {
                 foreach ($devices as $device) {
                     $this->SendDebug(__FUNCTION__, 'device=' . print_r($device, true), 0);
@@ -598,7 +610,7 @@ class WaremaWebControlIO extends IPSModule
         echo $s;
     }
 
-    private function get_Lang()
+    private function WebControl_GetLanguage()
     {
         $payload = [
             self::$TEL_SPRACHE,
@@ -609,7 +621,7 @@ class WaremaWebControlIO extends IPSModule
         return isset($jdata['sprache']) ? $jdata['sprache'] : -1;
     }
 
-    private function get_Devices()
+    private function WebControl_GetDevices()
     {
         $room_id = 0;
         $channel_id = 0;
@@ -663,7 +675,7 @@ class WaremaWebControlIO extends IPSModule
         return $devices;
     }
 
-    private function get_Position($room_id, $channel_id)
+    private function WebControl_QueryPosition($room_id, $channel_id)
     {
         $payload = [
             self::$TEL_POS_RUECKMELDUNG,
@@ -730,7 +742,7 @@ class WaremaWebControlIO extends IPSModule
         return false;
     }
 
-    private function set_Position($room_id, $channel_id, $position, $winkel, $volant1, $volant2)
+    private function WebControl_SendPosition($room_id, $channel_id, $position, $winkel, $volant1, $volant2)
     {
         if ($position != 255) {
             $position *= 2;
@@ -760,7 +772,7 @@ class WaremaWebControlIO extends IPSModule
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
     }
 
-    private function set_Stop($room_id, $channel_id)
+    private function WebControl_SetStop($room_id, $channel_id)
     {
         $payload = [
             self::$TEL_KANALBEDIENUNG,
@@ -773,7 +785,7 @@ class WaremaWebControlIO extends IPSModule
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
     }
 
-    private function set_Hoch($room_id, $channel_id)
+    private function WebControl_SendHigh($room_id, $channel_id)
     {
         $payload = [
             self::$TEL_KANALBEDIENUNG,
@@ -786,7 +798,7 @@ class WaremaWebControlIO extends IPSModule
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
     }
 
-    private function set_Tief($room_id, $channel_id)
+    private function WebControl_SendLow($room_id, $channel_id)
     {
         $payload = [
             self::$TEL_KANALBEDIENUNG,
@@ -812,16 +824,16 @@ class WaremaWebControlIO extends IPSModule
         $ret = '';
         if (isset($jdata['Function'])) {
             switch ($jdata['Function']) {
-                case 'DeviceList':
-                    $devices = $this->get_Devices();
+                case 'GetDevices':
+                    $devices = $this->WebControl_GetDevices();
                     $ret = json_encode($devices);
                     break;
-                case 'Position':
+                case 'QueryPosition':
                     if (isset($jdata['room_id']) == false || isset($jdata['channel_id']) == false) {
                         $this->SendDebug(__FUNCTION__, 'missing room_id/channel_id', 0);
                         break;
                     }
-                    $ret = $this->get_Position($jdata['room_id'], $jdata['channel_id']);
+                    $ret = $this->WebControl_QueryPosition($jdata['room_id'], $jdata['channel_id']);
                     break;
                 default:
                     $this->SendDebug(__FUNCTION__, 'unknown function "' . $jdata['Function'] . '"', 0);

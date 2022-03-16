@@ -24,19 +24,19 @@
 
 ### a. Installation des Moduls
 
-Im [Module Store](https://www.symcon.de/service/dokumentation/komponenten/verwaltungskonsole/module-store/) ist das Modul unter dem Suchbegriff *Warema WebControl* zu finden.<br>
-Alternativ kann das Modul über [Module Control](https://www.symcon.de/service/dokumentation/modulreferenz/module-control/) unter Angabe der URL `https://github.com/demel42/IPSymconWaremaWebControl.git` installiert werden.
+Im [Module Store](https://www.symcon.de/service/dokumentation/komponenten/verwaltungskonsole/module-store/) ist das Modul unter dem Suchbegriff *Warema WMS* zu finden.<br>
+Alternativ kann das Modul über [Module Control](https://www.symcon.de/service/dokumentation/modulreferenz/module-control/) unter Angabe der URL `https://github.com/demel42/IPSymconWaremaWMS.git` installiert werden.
 
 ### b. Einrichtung in IPS
 
-#### WaremaWebControlIO
-#### WaremaWebControlConfig
+#### WaremaWMSIO
+#### WaremaWMSConfig
 
 ## 4. Funktionsreferenz
 
 ## 5. Konfiguration
 
-### WaremaWebControlConfig
+### WaremaWMSConfig
 
 #### Properties
 
@@ -49,7 +49,7 @@ Alternativ kann das Modul über [Module Control](https://www.symcon.de/service/d
 | :------------------------- | :----------- |
 
 
-### WaremaWebControlDevice
+### WaremaWMSDevice
 
 #### Properties
 
@@ -81,14 +81,14 @@ Es werden folgende Variablenprofile angelegt:
 GUIDs
 - Modul: `{275F8086-2BAE-0114-374B-B871E0564EAB}`
 - Instanzen:
-  - WaremaWebControlIO: `{6A9BBD57-8473-682D-4ABF-009AE8584B2B}`
-  - WaremaWebControlConfig: `{657F43A7-9122-0568-5E0C-3301A6DFFAF5}`
-  - WaremaWebControlDevice: `{6A9BBD57-8473-682D-4ABF-009AE8584B2B}`
+  - WaremaWMSIO: `{6A9BBD57-8473-682D-4ABF-009AE8584B2B}`
+  - WaremaWMSConfig: `{657F43A7-9122-0568-5E0C-3301A6DFFAF5}`
+  - WaremaWMSDevice: `{6A9BBD57-8473-682D-4ABF-009AE8584B2B}`
 - Nachrichten:
-  - `{A8C43E67-9C5C-8A22-1F46-69EC56138C81}`: an WaremaWebControlIO
-  - `{B78E405B-23E3-10A5-4B26-F24277883F96}`: an WaremaWebControlConfig, WaremaWebControlDevice
+  - `{A8C43E67-9C5C-8A22-1F46-69EC56138C81}`: an WaremaWMSIO
+  - `{B78E405B-23E3-10A5-4B26-F24277883F96}`: an WaremaWMSConfig, WaremaWMSDevice
 
 ## 7. Versions-Historie
 
-- 0.9 @ 15.03.2022 17:53 (test)
+- 0.9 @ 16.03.2022 16:18 (test)
   - Initiale Version

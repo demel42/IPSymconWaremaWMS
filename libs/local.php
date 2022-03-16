@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-trait WaremaWebControlLocalLib
+trait WaremaWMSLocalLib
 {
     public static $IS_INVALIDCONFIG = IS_EBASE + 1;
     public static $IS_SERVERERROR = IS_EBASE + 2;
@@ -13,6 +13,8 @@ trait WaremaWebControlLocalLib
     public static $STATUS_INVALID = 0;
     public static $STATUS_VALID = 1;
     public static $STATUS_RETRYABLE = 2;
+
+    private static $INTERFACE_WEBCONTROL = 0;
 
     private static $LANG_DE = 0;
     private static $LANG_EN = 1;
@@ -174,5 +176,25 @@ trait WaremaWebControlLocalLib
             $s = $this->Translate('unknown product') . ' ' . $product;
         }
         return $s;
+    }
+
+    private function InterfaceMapping()
+    {
+        return [
+            self::$INTERFACE_WEBCONTROL => 'WebControl',
+        ];
+    }
+
+    private function InterfaceAsOptions()
+    {
+        $maps = $this->InterfaceMapping();
+        $opts = [];
+        foreach ($maps as $u => $e) {
+            $opts[] = [
+                'caption' => $e,
+                'value'   => $u,
+            ];
+        }
+        return $opts;
     }
 }

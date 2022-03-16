@@ -1,9 +1,9 @@
 {
     "id": "{DAC4B9CA-4754-8292-3B64-6A825163AB09}",
-    "name": "Warema WebControl Device",
+    "name": "Warema WMS Device",
     "type": 3,
     "vendor": "Warema",
-    "aliases": [ "Warema WebControl Gerät" ],
+    "aliases": [ "Warema WMS Gerät" ],
     "parentRequirements": [
         "{A8C43E67-9C5C-8A22-1F46-69EC56138C81}"
     ],
@@ -12,5 +12,5 @@
         "{B78E405B-23E3-10A5-4B26-F24277883F96}"
     ],
     "prefix": "WMS",
-    "url": "https://github.com/demel42/IPSymconWaremaWebControl/blob/master/README.md"
+    "url": "https://github.com/demel42/IPSymconWaremaWMS/blob/master/README.md"
 }

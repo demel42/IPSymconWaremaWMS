@@ -1,12 +1,12 @@
 {
     "id": "{275F8086-2BAE-0114-374B-B871E0564EAB}",
-    "name": "Warema WebControl",
+    "name": "Warema WMS",
     "author": "Ch. Damsky",
-    "url": "https://github.com/demel42/IPSymconWaremaWebControl.git",
+    "url": "https://github.com/demel42/IPSymconWaremaWMS.git",
     "compatibility": {
         "version": "6.0"
     },
     "version": "0.9",
     "build": 0,
-    "date": 1647363188
+    "date": 1647443894
 }

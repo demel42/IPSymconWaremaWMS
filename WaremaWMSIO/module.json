@@ -1,9 +1,9 @@
 {
     "id": "{6A9BBD57-8473-682D-4ABF-009AE8584B2B}",
-    "name": "Warema WebControl IO",
+    "name": "Warema WMS IO",
     "type": 1,
     "vendor": "Warema",
-    "aliases": [ "Warema WebControl I/O" ],
+    "aliases": [ "Warema WMS I/O" ],
     "parentRequirements": [],
     "childRequirements": [
         "{B78E405B-23E3-10A5-4B26-F24277883F96}"
@@ -12,5 +12,5 @@
         "{A8C43E67-9C5C-8A22-1F46-69EC56138C81}"
     ],
     "prefix": "WMS",
-    "url": "https://github.com/demel42/IPSymconWaremaWebControl/blob/master/README.md"
+    "url": "https://github.com/demel42/IPSymconWaremaWMS/blob/master/README.md"
 }

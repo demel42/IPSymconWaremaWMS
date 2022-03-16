@@ -1,9 +1,24 @@
 {
     "translations": {
         "de": {
-			"Warema WebControl configurator": "Warema WebControl Konfigurator",
+			"Warema WMS configurator": "Warema WMS Konfigurator",
 
 			"Instance has no active parent instance": "Instanz hat keine aktive übergeordnete Instanz",
+
+			"Import category": "Kategorie zu Anlage von Instanzen",
+
+			"Devices": "Geräte",
+			"Room ID": "Raum-ID",
+			"Channel ID": "Kanal-ID",
+			"Product": "Produkt",
+
+			"Awning": "Markise",
+            "Awning with windsensor": "Markise mit Windsensor",
+
+            "Test area": "Test-Bereich",
+
+            "Expert area": "Experten-Bereich",
+			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
 
 			"Information": "Information",
 
