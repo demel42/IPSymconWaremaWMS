@@ -369,6 +369,6 @@ class WaremaWMSDevice extends IPSModule
             'channel_id' => $channel_id,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-		return $ret;
+        return $ret;
     }
 }
