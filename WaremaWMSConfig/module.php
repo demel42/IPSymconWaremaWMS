@@ -83,15 +83,15 @@ class WaremaWMSConfig extends IPSModule
 
         $this->SetStatus(IS_ACTIVE);
 
-        $SendData = [
+        $data = [
             'DataID'   => '{A8C43E67-9C5C-8A22-1F46-69EC56138C81}',
-            'Function' => 'GetDevices'
+            'Function' => 'GetDevices',
         ];
-        $data = $this->SendDataToParent(json_encode($SendData));
-        $devices = json_decode($data, true);
+        $ret = $this->SendDataToParent(json_encode($data));
+        $r = json_decode($ret, true);
+        $devices = isset($r['Data']) ? $r['Data'] : false;
         $this->SendDebug(__FUNCTION__, 'devices=' . print_r($devices, true), 0);
-
-        if ($devices != '') {
+        if (is_array($devices) && count($devices)) {
             $guid = '{DAC4B9CA-4754-8292-3B64-6A825163AB09}';
             $instIDs = IPS_GetInstanceListByModuleID($guid);
             foreach ($devices as $device) {

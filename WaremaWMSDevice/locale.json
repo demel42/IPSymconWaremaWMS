@@ -1,10 +1,10 @@
 {
-    "translations": {
-        "de": {
+	"translations": {
+		"de": {
 			"Warema WebControl Device": "Warema WebControl Gerät",
 
 			"Instance has no active parent instance": "Instanz hat keine aktive übergeordnete Instanz",
-            "Disable instance": "Instanz deaktivieren",
+			"Disable instance": "Instanz deaktivieren",
 
 			"Basic configuration (don't change)": "Basis-Konfiguration (nicht ändern)",
 
@@ -16,11 +16,27 @@
 			"Seconds": "Sekunden",
 
 			"Awning": "Markise",
-            "Awning with windsensor": "Markise mit Windsensor",
+			"Awning with windsensor": "Markise mit Windsensor",
 
-            "Test area": "Test-Bereich",
+			"Ok": "Ok",
+			"Receiver not reachable": "Empfänger nicht erreichbar",
 
-            "Expert area": "Experten-Bereich",
+			"Up": "Auf",
+			"Stop": "Stop",
+			"Down": "Ab",
+
+			"Stand": "steht",
+			"Moves": "fährt",
+			
+			"State": "Status",
+			"Position": "Position",
+			"Control": "Steuerung",
+			"Activity": "Aktivität",
+			"Last status update": "letze Aktualisierung",
+
+			"Test area": "Test-Bereich",
+
+			"Expert area": "Experten-Bereich",
 			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
 
 			"Information": "Information",
@@ -58,6 +74,6 @@
 			"Instance is inactive (http error)": "Instanz ist inaktiv (HTTP-Fehler)",
 			"Instance is inactive (invalid data)": "Instanz ist inaktiv (ungültige Daten)",
 			"Instance is inactive (appliance failure)": "Instanz ist inaktiv (Gerätefehler)"
-        }
-    }
+		}
+	}
 }

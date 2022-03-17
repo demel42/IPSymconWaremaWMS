@@ -44,13 +44,58 @@ class WaremaWMSDevice extends IPSModule
         return $s;
     }
 
+    private function product2options($product)
+    {
+        $options = [
+            'position_slider' => false,
+            'control3'        => false, // Up, Stop, Down
+            'activity'        => false,
+        ];
+
+        switch ($product) {
+            case self::$PRODUCT_MARKISE:
+            case self::$PRODUCT_MARKISE_INT_WIND:
+                $options['position_slider'] = true;
+                $options['control3'] = true;
+                $options['activity'] = true;
+                break;
+            default:
+                $this->SendDebug(__FUNCTION__, 'unknown product ' . $product, 0);
+                break;
+        }
+        return $options;
+    }
+
     public function ApplyChanges()
     {
         parent::ApplyChanges();
 
-        $vpos = 0;
+        $product = $this->ReadPropertyInteger('product');
+        $options = $this->product2options($product);
+        $this->SendDebug(__FUNCTION__, 'options=' . print_r($options, true), 0);
 
-        //         $this->SetSummary($techType . ' (#' . $fabNumber . ')');
+        $vpos = 0;
+        $this->MaintainVariable('State', $this->Translate('State'), VARIABLETYPE_INTEGER, 'WaremaWMS.State', $vpos++, true);
+
+        $vpos = 10;
+        $this->MaintainVariable('Position', $this->Translate('Position'), VARIABLETYPE_INTEGER, 'WaremaWMS.Position', $vpos++, $options['position_slider']);
+        if ($options['position_slider']) {
+            $this->MaintainAction('Position', true);
+        }
+
+        if ($options['control3']) {
+            $this->MaintainVariable('Control', $this->Translate('Control'), VARIABLETYPE_INTEGER, 'WaremaWMS.Control3', $vpos++, true);
+            $this->MaintainAction('Control', true);
+        } else {
+            $this->UnregisterVariable('Control');
+        }
+
+        $this->MaintainVariable('Activity', $this->Translate('Activity'), VARIABLETYPE_INTEGER, 'WaremaWMS.Activity', $vpos++, $options['activity']);
+
+        $vpos = 100;
+        $this->MaintainVariable('LastStatus', $this->Translate('Last status update'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
+
+        $this->SetSummary($this->DecodeProduct($product));
 
         $refs = $this->GetReferenceList();
         foreach ($refs as $ref) {
@@ -151,6 +196,18 @@ class WaremaWMSDevice extends IPSModule
 
         $formActions[] = [
             'type'      => 'ExpansionPanel',
+            'caption'   => 'Expert area',
+            'expanded ' => false,
+            'items'     => [
+                [
+                    'type'    => 'Button',
+                    'caption' => 'Re-install variable-profiles',
+                    'onClick' => 'WMS_InstallVarProfiles($id, true);'
+                ],
+            ],
+        ];
+        $formActions[] = [
+            'type'      => 'ExpansionPanel',
             'caption'   => 'Test area',
             'expanded ' => false,
             'items'     => [
@@ -166,9 +223,9 @@ class WaremaWMSDevice extends IPSModule
         return $formActions;
     }
 
-    public function RequestAction($Ident, $Value)
+    public function RequestAction($ident, $value)
     {
-        if ($this->CommonRequestAction($Ident, $Value)) {
+        if ($this->CommonRequestAction($ident, $value)) {
             return;
         }
 
@@ -177,16 +234,44 @@ class WaremaWMSDevice extends IPSModule
             return;
         }
 
-        switch ($Ident) {
-            default:
-                $this->SendDebug(__FUNCTION__, 'invalid ident ' . $Ident, 0);
+        $this->SendDebug(__FUNCTION__, 'ident=' . $ident . ', value=' . $value, 0);
+
+        $r = false;
+        switch ($ident) {
+            case 'Control':
+                switch ($value) {
+                    case self::$CONTROL_STOP:
+                        $r = $this->SendStop();
+                        break;
+                    case self::$CONTROL_UP:
+                        $r = $this->SendUp();
+                        break;
+                    case self::$CONTROL_DOWN:
+                        $r = $this->SendDown();
+                        break;
+                    default:
+                        $this->SendDebug(__FUNCTION__, 'invalid value ' . $value . ' for ident ' . $ident, 0);
+                        break;
+                }
                 break;
+            case 'Position':
+                $r = $this->SendPosition($value);
+                break;
+            default:
+                $this->SendDebug(__FUNCTION__, 'invalid ident ' . $ident, 0);
+                break;
+        }
+        if ($r) {
+            $this->SetValue($ident, $value);
+            // $this->SetUpdateInterval(1);
         }
     }
 
-    protected function SetUpdateInterval()
+    protected function SetUpdateInterval($sec = null)
     {
-        $sec = $this->ReadPropertyInteger('update_interval');
+        if ($sec == null) {
+            $sec = $this->ReadPropertyInteger('update_interval');
+        }
         $msec = $sec > 0 ? $sec * 1000 : 0;
         $this->SetTimerInterval('UpdateStatus', $msec);
     }
@@ -204,17 +289,86 @@ class WaremaWMSDevice extends IPSModule
             return;
         }
 
+        $r = $this->QueryPosition();
+        $this->SendDebug(__FUNCTION__, 'r=' . print_r($r, true), 0);
+
         $this->SetUpdateInterval();
     }
 
-    public function Send()
+    private function SendDataToIO($func, $data)
     {
-        $this->SendDataToParent(json_encode(['DataID' => '{A8C43E67-9C5C-8A22-1F46-69EC56138C81}']));
+        $data['DataID'] = '{A8C43E67-9C5C-8A22-1F46-69EC56138C81}';
+        $data['Function'] = $func;
+        $this->SendDebug(__FUNCTION__, 'data=' . print_r($data, true), 0);
+        $ret = $this->SendDataToParent(json_encode($data));
+        $ret = json_decode($ret, true);
+        $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
+        return $ret;
     }
 
-    public function ReceiveData($JSONString)
+    public function SendStop()
     {
-        $data = json_decode($JSONString);
-        IPS_LogMessage('Device RECV', utf8_decode($data->Buffer));
+        $room_id = $this->ReadPropertyInteger('room_id');
+        $channel_id = $this->ReadPropertyInteger('channel_id');
+
+        $data = [
+            'room_id'    => $room_id,
+            'channel_id' => $channel_id,
+        ];
+        $ret = $this->SendDataToIO(__FUNCTION__, $data);
+        return $ret['Status'];
+    }
+
+    public function SendUp()
+    {
+        $room_id = $this->ReadPropertyInteger('room_id');
+        $channel_id = $this->ReadPropertyInteger('channel_id');
+
+        $data = [
+            'room_id'    => $room_id,
+            'channel_id' => $channel_id,
+        ];
+        $ret = $this->SendDataToIO(__FUNCTION__, $data);
+        return $ret['Status'];
+    }
+
+    public function SendDown()
+    {
+        $room_id = $this->ReadPropertyInteger('room_id');
+        $channel_id = $this->ReadPropertyInteger('channel_id');
+
+        $data = [
+            'room_id'    => $room_id,
+            'channel_id' => $channel_id,
+        ];
+        $ret = $this->SendDataToIO(__FUNCTION__, $data);
+        return $ret['Status'];
+    }
+
+    public function SendPosition(int $position)
+    {
+        $room_id = $this->ReadPropertyInteger('room_id');
+        $channel_id = $this->ReadPropertyInteger('channel_id');
+
+        $data = [
+            'room_id'    => $room_id,
+            'channel_id' => $channel_id,
+            'position'   => $position,
+        ];
+        $ret = $this->SendDataToIO(__FUNCTION__, $data);
+        return $ret['Status'];
+    }
+
+    public function QueryPosition()
+    {
+        $room_id = $this->ReadPropertyInteger('room_id');
+        $channel_id = $this->ReadPropertyInteger('channel_id');
+
+        $data = [
+            'room_id'    => $room_id,
+            'channel_id' => $channel_id,
+        ];
+        $ret = $this->SendDataToIO(__FUNCTION__, $data);
+		return $ret;
     }
 }

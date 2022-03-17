@@ -1,6 +1,6 @@
 {
-    "translations": {
-        "de": {
+	"translations": {
+		"de": {
 			"Warema WMS configurator": "Warema WMS Konfigurator",
 
 			"Instance has no active parent instance": "Instanz hat keine aktive übergeordnete Instanz",
@@ -13,11 +13,11 @@
 			"Product": "Produkt",
 
 			"Awning": "Markise",
-            "Awning with windsensor": "Markise mit Windsensor",
+			"Awning with windsensor": "Markise mit Windsensor",
 
-            "Test area": "Test-Bereich",
+			"Test area": "Test-Bereich",
 
-            "Expert area": "Experten-Bereich",
+			"Expert area": "Experten-Bereich",
 			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
 
 			"Information": "Information",
@@ -54,7 +54,7 @@
 			"Instance is inactive (server error)": "Instanz ist inaktiv (Serverfehler)",
 			"Instance is inactive (http error)": "Instanz ist inaktiv (HTTP-Fehler)",
 			"Instance is inactive (invalid data)": "Instanz ist inaktiv (ungültige Daten)",
-            "Instance is inactive (appliance failure)": "Instanz ist inaktiv (Gerätefehler)"
-        }
-    }
+			"Instance is inactive (appliance failure)": "Instanz ist inaktiv (Gerätefehler)"
+		}
+	}
 }

@@ -42,8 +42,8 @@ class WaremaWMSIO extends IPSModule
     private static $RES_INFRASTRUKTUR_LADEN = 30;
     private static $TEL_DEF_INFRASTRUKTUR_SPEICHERN = 31;
     private static $RES_DEF_INFRASTRUKTUR_SPEICHERN = 32;
-    private static $TEL_KANALBEDIENUNG = 33;			// ??
-    private static $RES_KANALBEDIENUNG = 34;
+    private static $TEL_KANALBEDIENUNG = 33;			// WebControl_Kanalbedienung()
+    private static $RES_KANALBEDIENUNG = 34;			// WebControl_Kanalbedienung()
     private static $TEL_POS_RUECKMELDUNG = 35;			// WebControl_QueryPosition()
     private static $RES_POS_RUECKMELDUNG = 36;			// WebControl_QueryPosition()
     private static $TEL_WINKEN = 37;
@@ -61,7 +61,7 @@ class WaremaWMSIO extends IPSModule
     private static $TEL_POLLING = 49;					// WebControl_QueryPosition()
     private static $RES_POLLING = 50;					// WebControl_QueryPosition()
     private static $RES_WMS_STACK_BUSY = 51;			// WebControl_QueryPosition()
-    private static $RES_ERROR_MESSAGE = 52;
+    private static $RES_ERROR_MESSAGE = 52;				// do_HttpRequest()
     private static $TEL_SPRACHE = 61;					// WebControl_GetLanguage()
     private static $RES_SPRACHE = 62;
     private static $TEL_SET_GRENZWERTE = 63;
@@ -288,76 +288,44 @@ class WaremaWMSIO extends IPSModule
             'onClick' => 'WMS_TestAccess($id);'
         ];
 
+        $items = [];
+
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            $items[] = [
+                'type'    => 'RowLayout',
+                'items'   => [
+                    [
+                        'type'    => 'Label',
+                        'caption' => 'Decode element "protocol" of url',
+                    ],
+                    [
+                        'type'    => 'ValidationTextBox',
+                        'name'    => 'protocol',
+                        'caption' => 'String'
+                    ],
+                    [
+                        'type'    => 'Button',
+                        'caption' => 'Decode',
+                        'onClick' => 'WMS_DecodeProtocol($id, $protocol);'
+                    ],
+                    [
+                        'type'    => 'Label',
+                    ],
+                ],
+            ];
+        }
+        $items[] = [
+            'type'    => 'Button',
+            'caption' => 'Re-install variable-profiles',
+            'onClick' => 'WMS_InstallVarProfiles($id, true);'
+        ];
+
         $formActions[] = [
             'type'      => 'ExpansionPanel',
             'caption'   => 'Expert area',
             'expanded ' => false,
-            'items'     => [
-                [
-                    'type'    => 'RowLayout',
-                    'items'   => [
-                        [
-                            'type'    => 'Label',
-                            'caption' => 'Decode element "protocol" of url',
-                        ],
-                        [
-                            'type'    => 'ValidationTextBox',
-                            'name'    => 'protocol',
-                            'caption' => 'String'
-                        ],
-                        [
-                            'type'    => 'Button',
-                            'caption' => 'Decode',
-                            'onClick' => 'WMS_DecodeProtocol($id, $protocol);'
-                        ],
-                        [
-                            'type'    => 'Label',
-                        ],
-                    ],
-                ],
-                [
-                    'type'    => 'Button',
-                    'caption' => 'Get position',
-                    'onClick' => 'WMS_QueryPosition($id, 0, 0);'
-                ],
-                [
-                    'type'    => 'RowLayout',
-                    'items'   => [
-                        [
-                            'type'    => 'NumberSpinner',
-                            'minimum' => 0,
-                            'maximum' => 255,
-                            'name'    => 'position',
-                            'caption' => 'Position',
-                        ],
-                        [
-                            'type'    => 'Button',
-                            'caption' => 'Set position',
-                            'onClick' => 'WMS_SendPosition($id, 0, 0, $position);'
-                        ],
-                    ],
-                ],
-                [
-                    'type'    => 'Button',
-                    'caption' => 'Stop',
-                    'onClick' => 'WMS_SetStop($id, 0, 0);'
-                ],
-                [
-                    'type'    => 'Button',
-                    'caption' => 'Hoch',
-                    'onClick' => 'WMS_SendHigh($id, 0, 0);'
-                ],
-                [
-                    'type'    => 'Button',
-                    'caption' => 'Tief',
-                    'onClick' => 'WMS_SendLow($id, 0, 0);'
-                ],
-                [
-                    'type'    => 'Button',
-                    'caption' => 'Re-install variable-profiles',
-                    'onClick' => 'WMS_InstallVarProfiles($id, true);'
-                ],
-            ],
+            'items'     => $items,
         ];
 
         $formActions[] = [
@@ -395,32 +363,7 @@ class WaremaWMSIO extends IPSModule
         }
     }
 
-    public function QueryPosition($room_id, $channel_id)
-    {
-        $this->WebControl_QueryPosition($room_id, $channel_id);
-    }
-
-    public function SendPosition($room_id, $channel_id, $position)
-    {
-        $this->WebControl_SendPosition($room_id, $channel_id, $position, 255, 255, 255);
-    }
-
-    public function SetStop($room_id, $channel_id)
-    {
-        $this->WebControl_SetStop($room_id, $channel_id);
-    }
-
-    public function SendHigh($room_id, $channel_id)
-    {
-        $this->WebControl_SendHigh($room_id, $channel_id);
-    }
-
-    public function SendLow($room_id, $channel_id)
-    {
-        $this->WebControl_SendLow($room_id, $channel_id);
-    }
-
-    public function DecodeProtocol($protocol)
+    public function DecodeProtocol(string $protocol)
     {
         $msg = $this->Translate('Element "protocol"') . ' "' . $protocol . '"' . PHP_EOL;
         $msg .= PHP_EOL;
@@ -593,8 +536,9 @@ class WaremaWMSIO extends IPSModule
             $s .= $this->Translate('Language') . ': ' . $this->DecodeLang($lang) . PHP_EOL;
 
             $s .= $this->Translate('Devices') . ': ' . PHP_EOL;
-            $devices = $this->WebControl_GetDevices();
-            if (count($devices)) {
+            $r = $this->GetDevices();
+            $devices = isset($r['Data']) ? $r['Data'] : false;
+            if (is_array($devices) && count($devices)) {
                 foreach ($devices as $device) {
                     $this->SendDebug(__FUNCTION__, 'device=' . print_r($device, true), 0);
                     $s .= ' [' . $device['room_id'] . '/' . $device['channel_id'] . '] ' . $device['room_name'] . '/' . $device['channel_name'];
@@ -619,6 +563,23 @@ class WaremaWMSIO extends IPSModule
         $jdata = $this->do_HttpRequest($payload);
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
         return isset($jdata['sprache']) ? $jdata['sprache'] : -1;
+    }
+
+    private function GetDevices()
+    {
+        $interface = $this->ReadPropertyInteger('interface');
+        switch ($interface) {
+            case self::$INTERFACE_WEBCONTROL:
+                $ret = $this->WebControl_GetDevices();
+                break;
+            default:
+                $ret = [
+                    'Status' => false,
+                    'Error'  => 'command unsupported for interface ' . $interface,
+                ];
+                break;
+        }
+        return $ret;
     }
 
     private function WebControl_GetDevices()
@@ -672,16 +633,49 @@ class WaremaWMSIO extends IPSModule
             }
             $room_id++;
         }
-        return $devices;
+        $ret = [
+            'Status' => true,
+            'Data'   => $devices,
+        ];
+        return $ret;
     }
 
-    private function WebControl_QueryPosition($room_id, $channel_id)
+    private function QueryPosition($jdata)
     {
+        $interface = $this->ReadPropertyInteger('interface');
+        switch ($interface) {
+            case self::$INTERFACE_WEBCONTROL:
+                $ret = $this->WebControl_QueryPosition($jdata);
+                break;
+            default:
+                $ret = [
+                    'Status' => false,
+                    'Error'  => 'command unsupported for interface ' . $interface,
+                ];
+                break;
+        }
+        return $ret;
+    }
+
+    private function WebControl_QueryPosition($jdata)
+    {
+        foreach (['room_id', 'channel_id'] as $v) {
+            if (isset($jdata[$v]) == false) {
+                $ret = [
+                    'Status' => false,
+                    'Error'  => 'missing ' . $v,
+                ];
+                return $ret;
+            }
+            ${$v} = $jdata[$v];
+        }
+
         $payload = [
             self::$TEL_POS_RUECKMELDUNG,
             $room_id,
             $channel_id,
         ];
+
         $jdata = $this->do_HttpRequest($payload);
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
         $responseID = $this->GetArrayElem($jdata, 'responseID', 0);
@@ -708,42 +702,64 @@ class WaremaWMSIO extends IPSModule
         }
         $responseID = $this->GetArrayElem($jdata, 'responseID', 0);
         if ($responseID == self::$RES_POS_RUECKMELDUNG) {
-            $res = [];
+            $r = [];
             if (isset($jdata['fahrt'])) {
-                $res['fahrt'] = boolval($jdata['fahrt']);
+                $r['fahrt'] = boolval($jdata['fahrt']);
             }
             if (isset($jdata['position'])) {
                 $i = intval($jdata['position']);
                 if ($i != 255) {
-                    $res['position'] = (int) ($i / 2);
+                    $r['position'] = (int) ($i / 2);
                 }
             }
             if (isset($jdata['winkel'])) {
                 $i = intval($jdata['winkel']);
                 if ($i != 255) {
-                    $res['winkel'] = $i - 127;
+                    $r['winkel'] = $i - 127;
                 }
             }
             if (isset($jdata['positionvolant1'])) {
                 $i = intval($jdata['positionvolant1']);
                 if ($i != 255) {
-                    $res['positionvolant1'] = (int) ($i / 2);
+                    $r['positionvolant1'] = (int) ($i / 2);
                 }
             }
             if (isset($jdata['positionvolant2'])) {
                 $i = intval($jdata['positionvolant2']);
                 if ($i != 255) {
-                    $res['positionvolant2'] = (int) ($i / 2);
+                    $r['positionvolant2'] = (int) ($i / 2);
                 }
             }
-            $this->SendDebug(__FUNCTION__, 'res=' . print_r($res, true), 0);
-            return $res;
+            $ret = [
+                'Status' => true,
+                'Data'   => $r,
+            ];
+            $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
+            return $ret;
         }
-        return false;
+        $ret = [
+            'Status' => false,
+            'Error'  => 'communication failed',
+        ];
+        return $ret;
     }
 
-    private function WebControl_SendPosition($room_id, $channel_id, $position, $winkel, $volant1, $volant2)
+    private function SendPosition($jdata)
     {
+        foreach (['room_id', 'channel_id', 'position'] as $v) {
+            if (isset($jdata[$v]) == false) {
+                $ret = [
+                    'Status' => false,
+                    'Error'  => 'missing ' . $v,
+                ];
+                return $ret;
+            }
+            ${$v} = $jdata[$v];
+        }
+        foreach (['position', 'winkel', 'volant1', 'volant2'] as $v) {
+            ${$v} = isset($jdata[$v]) ? $jdata[$v] : 255;
+        }
+
         if ($position != 255) {
             $position *= 2;
         }
@@ -767,48 +783,104 @@ class WaremaWMSIO extends IPSModule
             $volant1,
             $volant2,
         ];
-
-        $jdata = $this->do_HttpRequest($payload);
-        $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
+        $r = $this->do_HttpRequest($payload);
+        if ($r == false) {
+            $ret = [
+                'Status' => false,
+                'Error'  => 'communication failed',
+            ];
+        } else {
+            $ret = [
+                'Status' => true,
+                'Data'   => $r,
+            ];
+        }
+        return $ret;
     }
 
-    private function WebControl_SetStop($room_id, $channel_id)
+    private function WebControl_Kanalbedienung($key, $jdata)
     {
+        foreach (['room_id', 'channel_id'] as $v) {
+            if (isset($jdata[$v]) == false) {
+                $ret = [
+                    'Status' => false,
+                    'Error'  => 'missing ' . $v,
+                ];
+                return $ret;
+            }
+            ${$v} = $jdata[$v];
+        }
+
         $payload = [
             self::$TEL_KANALBEDIENUNG,
             $room_id,
             $channel_id,
-            self::$FC_STOP,
+            $key,
         ];
-
-        $jdata = $this->do_HttpRequest($payload);
-        $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
+        $r = $this->do_HttpRequest($payload);
+        if ($r == false) {
+            $ret = [
+                'Status' => false,
+                'Error'  => 'communication failed',
+            ];
+        } else {
+            $ret = [
+                'Status' => true,
+                'Data'   => $r,
+            ];
+        }
+        return $ret;
     }
 
-    private function WebControl_SendHigh($room_id, $channel_id)
+    private function SendStop($jdata)
     {
-        $payload = [
-            self::$TEL_KANALBEDIENUNG,
-            $room_id,
-            $channel_id,
-            self::$FC_HOCH,
-        ];
-
-        $jdata = $this->do_HttpRequest($payload);
-        $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
+        $interface = $this->ReadPropertyInteger('interface');
+        switch ($interface) {
+            case self::$INTERFACE_WEBCONTROL:
+                $ret = $this->WebControl_Kanalbedienung(self::$FC_STOP, $jdata);
+                break;
+            default:
+                $ret = [
+                    'Status' => false,
+                    'Error'  => 'command unsupported for interface ' . $interface,
+                ];
+                break;
+        }
+        return $ret;
     }
 
-    private function WebControl_SendLow($room_id, $channel_id)
+    private function SendUp($jdata)
     {
-        $payload = [
-            self::$TEL_KANALBEDIENUNG,
-            $room_id,
-            $channel_id,
-            self::$FC_TIEF,
-        ];
+        $interface = $this->ReadPropertyInteger('interface');
+        switch ($interface) {
+            case self::$INTERFACE_WEBCONTROL:
+                $ret = $this->WebControl_Kanalbedienung(self::$FC_HOCH, $jdata);
+                break;
+            default:
+                $ret = [
+                    'Status' => false,
+                    'Error'  => 'command unsupported for interface ' . $interface,
+                ];
+                break;
+        }
+        return $ret;
+    }
 
-        $jdata = $this->do_HttpRequest($payload);
-        $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
+    private function SendDown($jdata)
+    {
+        $interface = $this->ReadPropertyInteger('interface');
+        switch ($interface) {
+            case self::$INTERFACE_WEBCONTROL:
+                $ret = $this->WebControl_Kanalbedienung(self::$FC_TIEF, $jdata);
+                break;
+            default:
+                $ret = [
+                    'Status' => false,
+                    'Error'  => 'command unsupported for interface ' . $interface,
+                ];
+                break;
+        }
+        return $ret;
     }
 
     public function ForwardData($data)
@@ -825,15 +897,22 @@ class WaremaWMSIO extends IPSModule
         if (isset($jdata['Function'])) {
             switch ($jdata['Function']) {
                 case 'GetDevices':
-                    $devices = $this->WebControl_GetDevices();
-                    $ret = json_encode($devices);
+                    $ret = json_encode($this->GetDevices());
                     break;
                 case 'QueryPosition':
-                    if (isset($jdata['room_id']) == false || isset($jdata['channel_id']) == false) {
-                        $this->SendDebug(__FUNCTION__, 'missing room_id/channel_id', 0);
-                        break;
-                    }
-                    $ret = $this->WebControl_QueryPosition($jdata['room_id'], $jdata['channel_id']);
+                    $ret = json_encode($this->QueryPosition($jdata));
+                    break;
+                case 'SendStop':
+                    $ret = json_encode($this->SendStop($jdata));
+                    break;
+                case 'SendUp':
+                    $ret = json_encode($this->SendUp($jdata));
+                    break;
+                case 'SendDown':
+                    $ret = json_encode($this->SendDown($jdata));
+                    break;
+                case 'SendPosition':
+                    $ret = json_encode($this->SendPosition($jdata));
                     break;
                 default:
                     $this->SendDebug(__FUNCTION__, 'unknown function "' . $jdata['Function'] . '"', 0);

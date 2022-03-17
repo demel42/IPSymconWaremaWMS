@@ -1,9 +1,9 @@
 {
-    "translations": {
-        "de": {
+	"translations": {
+		"de": {
 			"Warema WMS IO": "Warema WMS IO",
 
-            "Disable instance": "Instanz deaktivieren",
+			"Disable instance": "Instanz deaktivieren",
 
 			"Hostname of WebControl": "Hostname des WebControl",
 
@@ -28,15 +28,15 @@
 			"WebControl": "WebControl",
 
 			"Awning": "Markise",
-            "Awning with windsensor": "Markise mit Windsensor",
+			"Awning with windsensor": "Markise mit Windsensor",
 
 			"Host must be specified": "Host muss angegeben werden",
 			"The following points of the configuration are incorrect":
-                "Die folgenden Punkte der Konfiguration sind fehlerhaft",
+				"Die folgenden Punkte der Konfiguration sind fehlerhaft",
 
 			"Test access": "Zugriff prüfen",
 
-            "Test area": "Test-Bereich",
+			"Test area": "Test-Bereich",
 
 			"Decode element \"protocol\" of url": "Dekodierung des URL-Elements \"protocol\"",
 			"Decode": "dekodieren",
@@ -48,7 +48,7 @@
 			"Payload length": "Nutzdaten-Länge",
 			"Payload": "Nutzdaten",
 
-            "Expert area": "Experten-Bereich",
+			"Expert area": "Experten-Bereich",
 			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
 
 			"Information": "Information",
@@ -86,6 +86,6 @@
 			"Instance is inactive (http error)": "Instanz ist inaktiv (HTTP-Fehler)",
 			"Instance is inactive (invalid data)": "Instanz ist inaktiv (ungültige Daten)",
 			"Instance is inactive (appliance failure)": "Instanz ist inaktiv (Gerätefehler)"
-        }
-    }
+		}
+	}
 }

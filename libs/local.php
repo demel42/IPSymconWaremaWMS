@@ -65,6 +65,16 @@ trait WaremaWMSLocalLib
         private static $BEDIENTYP_LAST = 9;
      */
 
+    private static $STATE_OK = 0;
+    private static $STATE_NOT_REACHABLE = 1;
+
+    private static $CONTROL_STOP = 0;
+    private static $CONTROL_UP = 1;
+    private static $CONTROL_DOWN = 2;
+
+    private static $ACTIVITY_STAND = 0;
+    private static $ACTIVITY_MOVES = 1;
+
     private function GetFormStatus()
     {
         $formStatus = [];
@@ -107,6 +117,27 @@ trait WaremaWMSLocalLib
         if ($reInstall) {
             $this->SendDebug(__FUNCTION__, 'reInstall=' . $this->bool2str($reInstall), 0);
         }
+
+        $associations = [];
+        $associations[] = ['Wert' => self::$STATE_OK, 'Name' => $this->Translate('Ok'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_NOT_REACHABLE, 'Name' => $this->Translate('Receiver not reachable'), 'Farbe' => -1];
+        $this->CreateVarProfile('WaremaWMS.State', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
+
+        $associations = [];
+        $associations[] = ['Wert' => self::$CONTROL_UP, 'Name' => $this->Translate('Up'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CONTROL_STOP, 'Name' => $this->Translate('Stop'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CONTROL_DOWN, 'Name' => $this->Translate('Down'), 'Farbe' => -1];
+        $this->CreateVarProfile('WaremaWMS.Control3', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
+
+        $associations = [];
+        $associations[] = ['Wert' => self::$ACTIVITY_STAND, 'Name' => $this->Translate('Stand'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$ACTIVITY_MOVES, 'Name' => $this->Translate('Moves'), 'Farbe' => -1];
+        $this->CreateVarProfile('WaremaWMS.Activity', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
+
+        $associations = [];
+        $associations[] = ['Wert' => 0, 'Name' => '%.0f %%', 'Farbe' => -1];
+        $associations[] = ['Wert' => 255, 'Name' => '-', 'Farbe' => -1];
+        $this->CreateVarProfile('WaremaWMS.Position', VARIABLETYPE_INTEGER, '', 0, 100, 5, 0, '', $associations, $reInstall);
     }
 
     private function LangMapping()
