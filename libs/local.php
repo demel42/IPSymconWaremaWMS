@@ -66,7 +66,9 @@ trait WaremaWMSLocalLib
      */
 
     private static $STATE_OK = 0;
-    private static $STATE_NOT_REACHABLE = 1;
+    private static $STATE_CHANNEL_UNREACHABLE = 1;
+    private static $STATE_GATEWAY_UNREACHABLE = 2;
+    private static $STATE_ERROR = 9;
 
     private static $CONTROL_STOP = 0;
     private static $CONTROL_UP = 1;
@@ -120,7 +122,9 @@ trait WaremaWMSLocalLib
 
         $associations = [];
         $associations[] = ['Wert' => self::$STATE_OK, 'Name' => $this->Translate('Ok'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_NOT_REACHABLE, 'Name' => $this->Translate('Receiver not reachable'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_CHANNEL_UNREACHABLE, 'Name' => $this->Translate('Receiver not reachable'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_GATEWAY_UNREACHABLE, 'Name' => $this->Translate('Gateway not reachable'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_ERROR, 'Name' => $this->Translate('Error'), 'Farbe' => -1];
         $this->CreateVarProfile('WaremaWMS.State', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
 
         $associations = [];

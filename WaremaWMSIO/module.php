@@ -60,7 +60,7 @@ class WaremaWMSIO extends IPSModule
     private static $RES_RTC = 48;
     private static $TEL_POLLING = 49;					// WebControl_QueryPosition()
     private static $RES_POLLING = 50;					// WebControl_QueryPosition()
-    private static $RES_WMS_STACK_BUSY = 51;			// WebControl_QueryPosition()
+    private static $RES_WMS_STACK_BUSY = 51;			// WebControl_Kanalbedienung()
     private static $RES_ERROR_MESSAGE = 52;				// do_HttpRequest()
     private static $TEL_SPRACHE = 61;					// WebControl_GetLanguage()
     private static $RES_SPRACHE = 62;
@@ -574,7 +574,7 @@ class WaremaWMSIO extends IPSModule
                 break;
             default:
                 $ret = [
-                    'Status' => false,
+                    'State'  => self::$STATE_ERROR,
                     'Error'  => 'command unsupported for interface ' . $interface,
                 ];
                 break;
@@ -634,7 +634,7 @@ class WaremaWMSIO extends IPSModule
             $room_id++;
         }
         $ret = [
-            'Status' => true,
+            'State'  => self::$STATE_OK,
             'Data'   => $devices,
         ];
         return $ret;
@@ -649,7 +649,7 @@ class WaremaWMSIO extends IPSModule
                 break;
             default:
                 $ret = [
-                    'Status' => false,
+                    'State'  => self::$STATE_ERROR,
                     'Error'  => 'command unsupported for interface ' . $interface,
                 ];
                 break;
@@ -662,7 +662,7 @@ class WaremaWMSIO extends IPSModule
         foreach (['room_id', 'channel_id'] as $v) {
             if (isset($jdata[$v]) == false) {
                 $ret = [
-                    'Status' => false,
+                    'State'  => self::$STATE_ERROR,
                     'Error'  => 'missing ' . $v,
                 ];
                 return $ret;
@@ -675,11 +675,10 @@ class WaremaWMSIO extends IPSModule
             $room_id,
             $channel_id,
         ];
-
-        $jdata = $this->do_HttpRequest($payload);
-        $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
-        $responseID = $this->GetArrayElem($jdata, 'responseID', 0);
-        if ($responseID != self::$RES_POS_RUECKMELDUNG) {
+        $response = $this->do_HttpRequest($payload);
+        $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
+        $responseID = $this->GetArrayElem($response, 'responseID', 0);
+        if ($responseID == self::$RES_WMS_STACK_BUSY) {
             $payload = [
                 self::$TEL_POLLING,
                 $room_id,
@@ -689,10 +688,10 @@ class WaremaWMSIO extends IPSModule
             $i = 0;
             while (true) {
                 IPS_Sleep(1000);
-                $jdata = $this->do_HttpRequest($payload);
-                $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
-                $responseID = $this->GetArrayElem($jdata, 'responseID', 0);
-                if ($responseID != self::$RES_POLLING) {
+                $response = $this->do_HttpRequest($payload);
+                $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
+                $responseID = $this->GetArrayElem($response, 'responseID', 0);
+                if ($responseID != self::$RES_WMS_STACK_BUSY) {
                     break;
                 }
                 if ($i++ > 5) {
@@ -700,47 +699,69 @@ class WaremaWMSIO extends IPSModule
                 }
             }
         }
-        $responseID = $this->GetArrayElem($jdata, 'responseID', 0);
-        if ($responseID == self::$RES_POS_RUECKMELDUNG) {
-            $r = [];
-            if (isset($jdata['fahrt'])) {
-                $r['fahrt'] = boolval($jdata['fahrt']);
-            }
-            if (isset($jdata['position'])) {
-                $i = intval($jdata['position']);
-                if ($i != 255) {
-                    $r['position'] = (int) ($i / 2);
+        $responseID = $this->GetArrayElem($response, 'responseID', 0);
+        switch ($responseID) {
+            case self::$RES_POS_RUECKMELDUNG:
+                $r = [];
+                if (isset($response['fahrt'])) {
+                    $r['fahrt'] = boolval($response['fahrt']);
                 }
-            }
-            if (isset($jdata['winkel'])) {
-                $i = intval($jdata['winkel']);
-                if ($i != 255) {
-                    $r['winkel'] = $i - 127;
+                if (isset($response['position'])) {
+                    $i = intval($response['position']);
+                    if ($i != 255) {
+                        $r['position'] = (int) ($i / 2);
+                    }
                 }
-            }
-            if (isset($jdata['positionvolant1'])) {
-                $i = intval($jdata['positionvolant1']);
-                if ($i != 255) {
-                    $r['positionvolant1'] = (int) ($i / 2);
+                if (isset($response['winkel'])) {
+                    $i = intval($response['winkel']);
+                    if ($i != 255) {
+                        $r['winkel'] = $i - 127;
+                    }
                 }
-            }
-            if (isset($jdata['positionvolant2'])) {
-                $i = intval($jdata['positionvolant2']);
-                if ($i != 255) {
-                    $r['positionvolant2'] = (int) ($i / 2);
+                if (isset($response['positionvolant1'])) {
+                    $i = intval($response['positionvolant1']);
+                    if ($i != 255) {
+                        $r['positionvolant1'] = (int) ($i / 2);
+                    }
                 }
-            }
-            $ret = [
-                'Status' => true,
-                'Data'   => $r,
-            ];
-            $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
-            return $ret;
+                if (isset($response['positionvolant2'])) {
+                    $i = intval($response['positionvolant2']);
+                    if ($i != 255) {
+                        $r['positionvolant2'] = (int) ($i / 2);
+                    }
+                }
+                $ret = [
+                    'State'  => self::$STATE_OK,
+                    'Data'   => $r,
+                ];
+                break;
+            case self::$RES_POLLING:
+                $feedback = $this->GetArrayElem($response, 'feedback', 0);
+                if ($feedback > 0) {
+                    $ret = [
+                        'State'  => self::$STATE_CHANNEL_UNREACHABLE,
+                        'Error'  => 'feedback=' . $feedback,
+                    ];
+                } else {
+                    $ret = [
+                        'State'  => self::$STATE_OK,
+                    ];
+                }
+                break;
+            case self::$RES_ERROR_MESSAGE:
+                $ret = [
+                    'State'  => self::$STATE_ERROR,
+                    'Error'  => $this->decode_error($response['errorcode']),
+                ];
+                break;
+            default:
+                $ret = [
+                    'State'  => self::$STATE_GATEWAY_UNREACHABLE,
+                    'Error'  => 'communication failed',
+                ];
+                break;
         }
-        $ret = [
-            'Status' => false,
-            'Error'  => 'communication failed',
-        ];
+        $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
         return $ret;
     }
 
@@ -749,7 +770,7 @@ class WaremaWMSIO extends IPSModule
         foreach (['room_id', 'channel_id', 'position'] as $v) {
             if (isset($jdata[$v]) == false) {
                 $ret = [
-                    'Status' => false,
+                    'State'  => self::$STATE_ERROR,
                     'Error'  => 'missing ' . $v,
                 ];
                 return $ret;
@@ -763,39 +784,21 @@ class WaremaWMSIO extends IPSModule
         if ($position != 255) {
             $position *= 2;
         }
+        $jdata['arg1'] = $position;
         if ($winkel != 255) {
             $winkel += 127;
         }
+        $jdata['arg2'] = $winkel;
         if ($volant1 != 255) {
             $volant1 *= 2;
         }
+        $jdata['arg3'] = $volant1;
         if ($volant2 != 255) {
             $volant2 *= 2;
         }
+        $jdata['arg4'] = $volant2;
 
-        $payload = [
-            self::$TEL_KANALBEDIENUNG,
-            $room_id,
-            $channel_id,
-            self::$FC_SOLL_SICHER,
-            $position,
-            $winkel,
-            $volant1,
-            $volant2,
-        ];
-        $r = $this->do_HttpRequest($payload);
-        if ($r == false) {
-            $ret = [
-                'Status' => false,
-                'Error'  => 'communication failed',
-            ];
-        } else {
-            $ret = [
-                'Status' => true,
-                'Data'   => $r,
-            ];
-        }
-        return $ret;
+        return  $this->WebControl_Kanalbedienung(self::$FC_SOLL_SICHER, $jdata);
     }
 
     private function WebControl_Kanalbedienung($key, $jdata)
@@ -803,12 +806,16 @@ class WaremaWMSIO extends IPSModule
         foreach (['room_id', 'channel_id'] as $v) {
             if (isset($jdata[$v]) == false) {
                 $ret = [
-                    'Status' => false,
+                    'State'  => self::$STATE_ERROR,
                     'Error'  => 'missing ' . $v,
                 ];
                 return $ret;
             }
             ${$v} = $jdata[$v];
+        }
+        for ($i = 1; $i <= 4; $i++) {
+            $s = 'arg' . $i;
+            $arg[$i] = isset($jdata[$s]) ? $jdata[$s] : 0;
         }
 
         $payload = [
@@ -816,19 +823,70 @@ class WaremaWMSIO extends IPSModule
             $room_id,
             $channel_id,
             $key,
+            $arg[1],
+            $arg[2],
+            $arg[3],
+            $arg[4],
         ];
-        $r = $this->do_HttpRequest($payload);
-        if ($r == false) {
-            $ret = [
-                'Status' => false,
-                'Error'  => 'communication failed',
+        $response = $this->do_HttpRequest($payload);
+        $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
+        $responseID = $this->GetArrayElem($response, 'responseID', 0);
+        if ($responseID == self::$RES_WMS_STACK_BUSY) {
+            $payload = [
+                self::$TEL_POLLING,
+                $room_id,
+                $channel_id,
+                self::$POLL_KANALBEDIENUNG,
             ];
-        } else {
-            $ret = [
-                'Status' => true,
-                'Data'   => $r,
-            ];
+            $i = 0;
+            while (true) {
+                IPS_Sleep(1000);
+                $response = $this->do_HttpRequest($payload);
+                $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
+                $responseID = $this->GetArrayElem($response, 'responseID', 0);
+                if ($responseID != self::$RES_WMS_STACK_BUSY) {
+                    break;
+                }
+                if ($i++ > 5) {
+                    break;
+                }
+            }
         }
+        $responseID = $this->GetArrayElem($response, 'responseID', 0);
+        switch ($responseID) {
+            case self::$RES_KANALBEDIENUNG:
+                $ret = [
+                    'State'  => self::$STATE_OK,
+                    'Data'   => $response,
+                ];
+                break;
+            case self::$RES_POLLING:
+                $feedback = $this->GetArrayElem($response, 'feedback', 0);
+                if ($feedback > 0) {
+                    $ret = [
+                        'State'  => self::$STATE_CHANNEL_UNREACHABLE,
+                        'Error'  => 'feedback=' . $feedback,
+                    ];
+                } else {
+                    $ret = [
+                        'State'  => self::$STATE_OK,
+                    ];
+                }
+                break;
+            case self::$RES_ERROR_MESSAGE:
+                $ret = [
+                    'State'  => self::$STATE_ERROR,
+                    'Error'  => $this->decode_error($response['errorcode']),
+                ];
+                break;
+            default:
+                $ret = [
+                    'State'  => self::$STATE_GATEWAY_UNREACHABLE,
+                    'Error'  => 'communication failed',
+                ];
+                break;
+        }
+        $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
         return $ret;
     }
 
@@ -841,7 +899,7 @@ class WaremaWMSIO extends IPSModule
                 break;
             default:
                 $ret = [
-                    'Status' => false,
+                    'State'  => self::$STATE_ERROR,
                     'Error'  => 'command unsupported for interface ' . $interface,
                 ];
                 break;
@@ -858,7 +916,7 @@ class WaremaWMSIO extends IPSModule
                 break;
             default:
                 $ret = [
-                    'Status' => false,
+                    'State'  => self::$STATE_ERROR,
                     'Error'  => 'command unsupported for interface ' . $interface,
                 ];
                 break;
@@ -875,7 +933,7 @@ class WaremaWMSIO extends IPSModule
                 break;
             default:
                 $ret = [
-                    'Status' => false,
+                    'State'  => self::$STATE_ERROR,
                     'Error'  => 'command unsupported for interface ' . $interface,
                 ];
                 break;

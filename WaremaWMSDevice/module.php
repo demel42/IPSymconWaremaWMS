@@ -289,8 +289,18 @@ class WaremaWMSDevice extends IPSModule
             return;
         }
 
-        $r = $this->QueryPosition();
-        $this->SendDebug(__FUNCTION__, 'r=' . print_r($r, true), 0);
+        $ret = $this->QueryPosition();
+        $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
+        $this->SetValue('State', $ret['State']);
+        if ($ret['State'] == self::$STATE_OK) {
+            if (isset($ret['Data']['position'])) {
+                $this->SetValue('Position', $ret['Data']['position']);
+            }
+            if (isset($ret['Data']['fahrt'])) {
+                $this->SetValue('Position', boolval($ret['Data']['fahrt']));
+            }
+        }
+        $this->SetValue('LastStatus', time());
 
         $this->SetUpdateInterval();
     }
@@ -316,7 +326,8 @@ class WaremaWMSDevice extends IPSModule
             'channel_id' => $channel_id,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        return $ret['Status'];
+        $this->SetValue('State', $ret['State']);
+        return $ret['State'] == self::$STATE_OK;
     }
 
     public function SendUp()
@@ -329,7 +340,8 @@ class WaremaWMSDevice extends IPSModule
             'channel_id' => $channel_id,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        return $ret['Status'];
+        $this->SetValue('State', $ret['State']);
+        return $ret['State'] == self::$STATE_OK;
     }
 
     public function SendDown()
@@ -342,7 +354,8 @@ class WaremaWMSDevice extends IPSModule
             'channel_id' => $channel_id,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        return $ret['Status'];
+        $this->SetValue('State', $ret['State']);
+        return $ret['State'] == self::$STATE_OK;
     }
 
     public function SendPosition(int $position)
@@ -356,7 +369,8 @@ class WaremaWMSDevice extends IPSModule
             'position'   => $position,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        return $ret['Status'];
+        $this->SetValue('State', $ret['State']);
+        return $ret['State'] == self::$STATE_OK;
     }
 
     public function QueryPosition()

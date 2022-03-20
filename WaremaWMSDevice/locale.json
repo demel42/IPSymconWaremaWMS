@@ -19,7 +19,9 @@
 			"Awning with windsensor": "Markise mit Windsensor",
 
 			"Ok": "Ok",
+			"Gateway not reachable": "Gateway nicht erreichbar",
 			"Receiver not reachable": "Empfänger nicht erreichbar",
+			"Error": "Fehler",
 
 			"Up": "Auf",
 			"Stop": "Stop",
@@ -33,6 +35,8 @@
 			"Control": "Steuerung",
 			"Activity": "Aktivität",
 			"Last status update": "letze Aktualisierung",
+
+			"Update status": "Status aktualisieren",
 
 			"Test area": "Test-Bereich",
 
