@@ -263,7 +263,7 @@ class WaremaWMSDevice extends IPSModule
         }
         if ($r) {
             $this->SetValue($ident, $value);
-            // $this->SetUpdateInterval(1);
+            $this->SetUpdateInterval(1);
         }
     }
 
@@ -292,17 +292,26 @@ class WaremaWMSDevice extends IPSModule
         $ret = $this->QueryPosition();
         $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
         $this->SetValue('State', $ret['State']);
+
+        $tmout = 0;
+
         if ($ret['State'] == self::$STATE_OK) {
             if (isset($ret['Data']['position'])) {
                 $this->SetValue('Position', $ret['Data']['position']);
             }
             if (isset($ret['Data']['fahrt'])) {
-                $this->SetValue('Position', boolval($ret['Data']['fahrt']));
+                if (boolval($ret['Data']['fahrt'])) {
+                    $activity = self::$ACTIVITY_MOVES;
+                    $tmout = 1;
+                } else {
+                    $activity = self::$ACTIVITY_STAND;
+                }
+                $this->SetValue('Activity', $activity);
             }
         }
         $this->SetValue('LastStatus', time());
 
-        $this->SetUpdateInterval();
+        $this->SetUpdateInterval($tmout);
     }
 
     private function SendDataToIO($func, $data)
@@ -326,8 +335,15 @@ class WaremaWMSDevice extends IPSModule
             'channel_id' => $channel_id,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        $this->SetValue('State', $ret['State']);
-        return $ret['State'] == self::$STATE_OK;
+        if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
+            $state = self::$STATE_WIND_ALARM;
+        } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
+            $state = self::$STATE_RAIN_ALARM;
+        } else {
+            $state = $ret['State'];
+        }
+        $this->SetValue('State', $state);
+        return $state;
     }
 
     public function SendUp()
@@ -340,8 +356,15 @@ class WaremaWMSDevice extends IPSModule
             'channel_id' => $channel_id,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        $this->SetValue('State', $ret['State']);
-        return $ret['State'] == self::$STATE_OK;
+        if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
+            $state = self::$STATE_WIND_ALARM;
+        } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
+            $state = self::$STATE_RAIN_ALARM;
+        } else {
+            $state = $ret['State'];
+        }
+        $this->SetValue('State', $state);
+        return $state;
     }
 
     public function SendDown()
@@ -354,8 +377,15 @@ class WaremaWMSDevice extends IPSModule
             'channel_id' => $channel_id,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        $this->SetValue('State', $ret['State']);
-        return $ret['State'] == self::$STATE_OK;
+        if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
+            $state = self::$STATE_WIND_ALARM;
+        } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
+            $state = self::$STATE_RAIN_ALARM;
+        } else {
+            $state = $ret['State'];
+        }
+        $this->SetValue('State', $state);
+        return $state;
     }
 
     public function SendPosition(int $position)
@@ -369,8 +399,15 @@ class WaremaWMSDevice extends IPSModule
             'position'   => $position,
         ];
         $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        $this->SetValue('State', $ret['State']);
-        return $ret['State'] == self::$STATE_OK;
+        if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
+            $state = self::$STATE_WIND_ALARM;
+        } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
+            $state = self::$STATE_RAIN_ALARM;
+        } else {
+            $state = $ret['State'];
+        }
+        $this->SetValue('State', $state);
+        return $state;
     }
 
     public function QueryPosition()

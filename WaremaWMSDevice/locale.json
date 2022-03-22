@@ -21,6 +21,8 @@
 			"Ok": "Ok",
 			"Gateway not reachable": "Gateway nicht erreichbar",
 			"Receiver not reachable": "Empfänger nicht erreichbar",
+			"Wind alarm": "Wind-Alarm",
+			"Rain alarm": "Regen-Alarm",
 			"Error": "Fehler",
 
 			"Up": "Auf",

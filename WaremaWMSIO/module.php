@@ -855,9 +855,17 @@ class WaremaWMSIO extends IPSModule
         $responseID = $this->GetArrayElem($response, 'responseID', 0);
         switch ($responseID) {
             case self::$RES_KANALBEDIENUNG:
+                $feedback = $this->GetArrayElem($response, 'feedback', 0);
+                $r = [
+                    'processing' => $feedback == 0,
+                    'sun'        => $feedback & 1,
+                    'wind'       => $feedback & 2,
+                    'rain'       => $feedback & 4,
+                    'twilight'   => $feedback & 8,
+                ];
                 $ret = [
                     'State'  => self::$STATE_OK,
-                    'Data'   => $response,
+                    'Data'   => $r,
                 ];
                 break;
             case self::$RES_POLLING:
