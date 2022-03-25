@@ -48,7 +48,8 @@ class WaremaWMSDevice extends IPSModule
     {
         $options = [
             'position_slider' => false,
-            'control3'        => false, // Up, Stop, Down
+            'control_awning'  => false, // Retract, Stop, Extend
+            'control_blind'   => false, // Up, Stop, Down
             'activity'        => false,
         ];
 
@@ -56,7 +57,7 @@ class WaremaWMSDevice extends IPSModule
             case self::$PRODUCT_MARKISE:
             case self::$PRODUCT_MARKISE_INT_WIND:
                 $options['position_slider'] = true;
-                $options['control3'] = true;
+                $options['control_awning'] = true;
                 $options['activity'] = true;
                 break;
             default:
@@ -83,8 +84,8 @@ class WaremaWMSDevice extends IPSModule
             $this->MaintainAction('Position', true);
         }
 
-        if ($options['control3']) {
-            $this->MaintainVariable('Control', $this->Translate('Control'), VARIABLETYPE_INTEGER, 'WaremaWMS.Control3', $vpos++, true);
+        if ($options['control_awning']) {
+            $this->MaintainVariable('Control', $this->Translate('Control'), VARIABLETYPE_INTEGER, 'WaremaWMS.ControlAwning', $vpos++, true);
             $this->MaintainAction('Control', true);
         } else {
             $this->UnregisterVariable('Control');
@@ -111,15 +112,18 @@ class WaremaWMSDevice extends IPSModule
 
         $module_disable = $this->ReadPropertyBoolean('module_disable');
         if ($module_disable) {
+            $this->SetUpdateInterval(0);
             $this->SetStatus(IS_INACTIVE);
             return;
         }
 
         if ($this->CheckConfiguration() != false) {
+            $this->SetUpdateInterval(0);
             $this->SetStatus(self::$IS_INVALIDCONFIG);
             return;
         }
 
+        $this->SetUpdateInterval();
         $this->SetStatus(IS_ACTIVE);
     }
 
@@ -263,7 +267,7 @@ class WaremaWMSDevice extends IPSModule
         }
         if ($r) {
             $this->SetValue($ident, $value);
-            $this->SetUpdateInterval(1);
+            $this->SetUpdateInterval(0.5);
         }
     }
 
@@ -273,6 +277,7 @@ class WaremaWMSDevice extends IPSModule
             $sec = $this->ReadPropertyInteger('update_interval');
         }
         $msec = $sec > 0 ? $sec * 1000 : 0;
+        $this->SendDebug(__FUNCTION__, 'msec=' . $msec, 0);
         $this->SetTimerInterval('UpdateStatus', $msec);
     }
 
@@ -290,10 +295,10 @@ class WaremaWMSDevice extends IPSModule
         }
 
         $ret = $this->QueryPosition();
-        $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
+
         $this->SetValue('State', $ret['State']);
 
-        $tmout = 0;
+        $tmout = null;
 
         if ($ret['State'] == self::$STATE_OK) {
             if (isset($ret['Data']['position'])) {
@@ -302,7 +307,7 @@ class WaremaWMSDevice extends IPSModule
             if (isset($ret['Data']['fahrt'])) {
                 if (boolval($ret['Data']['fahrt'])) {
                     $activity = self::$ACTIVITY_MOVES;
-                    $tmout = 1;
+                    $tmout = 0.25;
                 } else {
                     $activity = self::$ACTIVITY_STAND;
                 }
@@ -343,7 +348,7 @@ class WaremaWMSDevice extends IPSModule
             $state = $ret['State'];
         }
         $this->SetValue('State', $state);
-        return $state;
+        return $state == self::$STATE_OK;
     }
 
     public function SendUp()
@@ -364,7 +369,7 @@ class WaremaWMSDevice extends IPSModule
             $state = $ret['State'];
         }
         $this->SetValue('State', $state);
-        return $state;
+        return $state == self::$STATE_OK;
     }
 
     public function SendDown()
@@ -385,7 +390,7 @@ class WaremaWMSDevice extends IPSModule
             $state = $ret['State'];
         }
         $this->SetValue('State', $state);
-        return $state;
+        return $state == self::$STATE_OK;
     }
 
     public function SendPosition(int $position)
@@ -407,7 +412,7 @@ class WaremaWMSDevice extends IPSModule
             $state = $ret['State'];
         }
         $this->SetValue('State', $state);
-        return $state;
+        return $state == self::$STATE_OK;
     }
 
     public function QueryPosition()

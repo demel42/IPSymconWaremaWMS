@@ -113,7 +113,7 @@ class WaremaWMSIO extends IPSModule
     private static $ERROR_CODE_CONTENT_INVALID = 42;
     private static $ERROR_CODE_PANID_INVALID = 43;
 
-    private static $POLL_KANALBEDIENUNG = 0;
+    private static $POLL_KANALBEDIENUNG = 0;			// WebControl_Kanalbedienung()
     private static $POLL_POSITION = 1;					// WebControl_QueryPosition()
     private static $POLL_GRENZWERTE = 2;
     private static $POLL_AKTOREN_ZUWEISEN = 3;
@@ -164,6 +164,9 @@ class WaremaWMSIO extends IPSModule
     private static $FC_WINKEN = 41;
     private static $FC_WINKEN_VL = 42;
     private static $FC_WINKEN_VR = 43;
+
+    private static $DEF_MAXRAUM = 20;
+    private static $DEF_MAXKANAL = 10;
 
     public function Create()
     {
@@ -502,12 +505,14 @@ class WaremaWMSIO extends IPSModule
                 foreach ($xml->children() as $key => $val) {
                     $jdata[$key] = (string) $val;
                 }
+                /*
                 $responseID = $this->GetArrayElem($jdata, 'responseID', 0);
                 if ($responseID == self::$RES_ERROR_MESSAGE) {
+                    $this->SendDebug(__FUNCTION__, 'responseID=' . $responseID . '(' . $this->decode_code($responseID) . '), jdata=' . print_r($jdata, true), 0);
                     $statuscode = self::$IS_APPFAIL;
                     $err = $this->decode_error($jdata['errorcode']);
-                    $jdata = false;
                 }
+                 */
             } else {
                 $statuscode = self::$IS_INVALIDDATA;
                 $err = 'malformed data';
@@ -584,42 +589,49 @@ class WaremaWMSIO extends IPSModule
 
     private function WebControl_GetDevices()
     {
-        $room_id = 0;
-        $channel_id = 0;
-        $jdata = false;
-
         $devices = [];
-        while (true) {
+
+        for ($room_id = 0; $room_id < self::$DEF_MAXRAUM; $room_id++) {
             $payload = [
                 self::$TEL_RAUM_ABFRAGEN,
                 $room_id,
             ];
-            $jdata = $this->do_HttpRequest($payload);
-            $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
-            if ($jdata == false) {
+            $response = $this->do_HttpRequest($payload);
+            $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
+            if ($response == false) {
                 break;
             }
-            $room_name = $this->GetArrayElem($jdata, 'raumname', '');
+            $responseID = $this->GetArrayElem($response, 'responseID', 0);
+            $this->SendDebug(__FUNCTION__, 'responseID=' . $responseID . '(' . $this->decode_code($responseID) . ')', 0);
+            if ($responseID != self::$RES_RAUM_ABFRAGEN) {
+                break;
+            }
+            $room_name = $this->GetArrayElem($response, 'raumname', '');
             if ($room_name == '') {
-                break;
+                continue;
             }
-            while (true) {
+            for ($channel_id = 0; $channel_id < self::$DEF_MAXKANAL; $channel_id++) {
                 $payload = [
                     self::$TEL_KANAL_ABFRAGEN,
                     $room_id,
                     $channel_id,
                 ];
-                $jdata = $this->do_HttpRequest($payload);
-                $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
-                if ($jdata == false) {
+                $response = $this->do_HttpRequest($payload);
+                $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
+                if ($response == false) {
                     break;
                 }
-                $channel_name = $this->GetArrayElem($jdata, 'kanalname', '');
-                if ($channel_name == '') {
+                $responseID = $this->GetArrayElem($response, 'responseID', 0);
+                $this->SendDebug(__FUNCTION__, 'responseID=' . $responseID . '(' . $this->decode_code($responseID) . ')', 0);
+                if ($responseID != self::$RES_KANAL_ABFRAGEN) {
                     break;
+                }
+                $channel_name = $this->GetArrayElem($response, 'kanalname', '');
+                if ($channel_name == '') {
+                    continue;
                 }
 
-                $product = $this->GetArrayElem($jdata, 'produkttyp', 255);
+                $product = $this->GetArrayElem($response, 'produkttyp', 255);
                 $device = [
                     'room_id'      => $room_id,
                     'room_name'    => $room_name,
@@ -629,9 +641,7 @@ class WaremaWMSIO extends IPSModule
                 ];
                 $devices[] = $device;
                 $this->SendDebug(__FUNCTION__, 'device=' . print_r($device, true), 0);
-                $channel_id++;
             }
-            $room_id++;
         }
         $ret = [
             'State'  => self::$STATE_OK,
@@ -657,6 +667,36 @@ class WaremaWMSIO extends IPSModule
         return $ret;
     }
 
+    private function WebControl_DoPolling($room_id, $channel_id, $poll_cmd, $max_rep)
+    {
+        $payload = [
+            self::$TEL_POLLING,
+            $room_id,
+            $channel_id,
+            $poll_cmd,
+        ];
+        for ($i = 0; $i < $max_rep; $i++) {
+            IPS_Sleep(250);
+            $response = $this->do_HttpRequest($payload);
+            $this->SendDebug(__FUNCTION__, 'repeat ' . $i . ', response=' . print_r($response, true), 0);
+            if ($response == false) {
+                break;
+            }
+            $responseID = $this->GetArrayElem($response, 'responseID', 0);
+            $this->SendDebug(__FUNCTION__, 'repeat ' . $i . ', responseID=' . $responseID . '(' . $this->decode_code($responseID) . ')', 0);
+            if (isset($response['befehl'])) {
+                $befehl = $response['befehl'];
+                $this->SendDebug(__FUNCTION__, 'repeat ' . $i . ', befehl=' . $befehl . '(' . $this->decode_befehl($befehl) . ')', 0);
+                if ($befehl != $poll_cmd) {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        return $response;
+    }
+
     private function WebControl_QueryPosition($jdata)
     {
         foreach (['room_id', 'channel_id'] as $v) {
@@ -677,28 +717,27 @@ class WaremaWMSIO extends IPSModule
         ];
         $response = $this->do_HttpRequest($payload);
         $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
-        $responseID = $this->GetArrayElem($response, 'responseID', 0);
-        if ($responseID == self::$RES_WMS_STACK_BUSY) {
-            $payload = [
-                self::$TEL_POLLING,
-                $room_id,
-                $channel_id,
-                self::$POLL_POSITION,
+        if ($response == false) {
+            $ret = [
+                'State'  => self::$STATE_ERROR,
+                'Error'  => 'URGS',
             ];
-            $i = 0;
-            while (true) {
-                IPS_Sleep(1000);
-                $response = $this->do_HttpRequest($payload);
-                $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
-                $responseID = $this->GetArrayElem($response, 'responseID', 0);
-                if ($responseID != self::$RES_WMS_STACK_BUSY) {
-                    break;
-                }
-                if ($i++ > 5) {
-                    break;
-                }
-            }
+            $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
+            return $ret;
         }
+
+        $responseID = $this->GetArrayElem($response, 'responseID', 0);
+        $this->SendDebug(__FUNCTION__, 'responseID=' . $responseID . '(' . $this->decode_code($responseID) . ')', 0);
+        $response = $this->WebControl_DoPolling($room_id, $channel_id, self::$POLL_POSITION, 10);
+        if ($response == false) {
+            $ret = [
+                'State'  => self::$STATE_ERROR,
+                'Error'  => 'URGS',
+            ];
+            $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
+            return $ret;
+        }
+
         $responseID = $this->GetArrayElem($response, 'responseID', 0);
         switch ($responseID) {
             case self::$RES_POS_RUECKMELDUNG:
@@ -830,28 +869,27 @@ class WaremaWMSIO extends IPSModule
         ];
         $response = $this->do_HttpRequest($payload);
         $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
-        $responseID = $this->GetArrayElem($response, 'responseID', 0);
-        if ($responseID == self::$RES_WMS_STACK_BUSY) {
-            $payload = [
-                self::$TEL_POLLING,
-                $room_id,
-                $channel_id,
-                self::$POLL_KANALBEDIENUNG,
+        if ($response == false) {
+            $ret = [
+                'State'  => self::$STATE_ERROR,
+                'Error'  => 'URGS',
             ];
-            $i = 0;
-            while (true) {
-                IPS_Sleep(1000);
-                $response = $this->do_HttpRequest($payload);
-                $this->SendDebug(__FUNCTION__, 'response=' . print_r($response, true), 0);
-                $responseID = $this->GetArrayElem($response, 'responseID', 0);
-                if ($responseID != self::$RES_WMS_STACK_BUSY) {
-                    break;
-                }
-                if ($i++ > 5) {
-                    break;
-                }
-            }
+            $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
+            return $ret;
         }
+
+        $responseID = $this->GetArrayElem($response, 'responseID', 0);
+        $this->SendDebug(__FUNCTION__, 'responseID=' . $responseID . '(' . $this->decode_code($responseID) . ')', 0);
+        $response = $this->WebControl_DoPolling($room_id, $channel_id, self::$POLL_KANALBEDIENUNG, 2);
+        if ($response == false) {
+            $ret = [
+                'State'  => self::$STATE_ERROR,
+                'Error'  => 'URGS',
+            ];
+            $this->SendDebug(__FUNCTION__, 'ret=' . print_r($ret, true), 0);
+            return $ret;
+        }
+
         $responseID = $this->GetArrayElem($response, 'responseID', 0);
         switch ($responseID) {
             case self::$RES_KANALBEDIENUNG:
@@ -992,9 +1030,9 @@ class WaremaWMSIO extends IPSModule
         return $ret;
     }
 
-    private function decode_error($code)
+    private function decode_error($err)
     {
-        $code2text = [
+        $err2text = [
             self::$ERROR_CODE_SD_KARTE        => 'SD_KARTE',
             self::$ERROR_CODE_MAX_SZENEN      => 'MAX_SZENEN',
             self::$ERROR_CODE_MAX_KANAL       => 'MAX_KANAL',
@@ -1006,17 +1044,141 @@ class WaremaWMSIO extends IPSModule
             self::$ERROR_CODE_PANID_INVALID   => 'PANID_INVALID',
         ];
 
-        if (isset($code2text[$code])) {
-            return $code2text[$code];
+        if (isset($err2text[$err])) {
+            $s = $err2text[$err];
         } else {
-            return 'unknown error-code ' . $code;
+            $s = 'unknown error ' . $err;
         }
+        return $s;
     }
 
-    /*
-    public function Send(string $Text)
+    private function decode_code($code)
     {
-        $this->SendDataToChildren(json_encode(['DataID' => '{B78E405B-23E3-10A5-4B26-F24277883F96}', 'Buffer' => $Text]));
+        $code2text = [
+            self::$TEL_RAUM_ANLEGEN                  => 'TEL_RAUM_ANLEGEN',
+            self::$RES_RAUM_ANLEGEN                  => 'RES_RAUM_ANLEGEN',
+            self::$TEL_RAUM_ABFRAGEN                 => 'TEL_RAUM_ABFRAGEN',
+            self::$RES_RAUM_ABFRAGEN                 => 'RES_RAUM_ABFRAGEN',
+            self::$TEL_RAUMNAMEN_AENDERN             => 'TEL_RAUMNAMEN_AENDERN',
+            self::$RES_RAUMNAMEN_AENDERN             => 'RES_RAUMNAMEN_AENDERN',
+            self::$TEL_RAUMREIHENFOLGE_AENDERN       => 'TEL_RAUMREIHENFOLGE_AENDERN',
+            self::$RES_RAUMREIHENFOLGE_AENDERN       => 'RES_RAUMREIHENFOLGE_AENDERN',
+            self::$TEL_RAUM_LOESCHEN                 => 'TEL_RAUM_LOESCHEN',
+            self::$RES_RAUM_LOESCHEN                 => 'RES_RAUM_LOESCHEN',
+            self::$TEL_KANAL_ANLEGEN                 => 'TEL_KANAL_ANLEGEN',
+            self::$RES_KANAL_ANLEGEN                 => 'RES_KANAL_ANLEGEN',
+            self::$TEL_KANAL_ABFRAGEN                => 'TEL_KANAL_ABFRAGEN',
+            self::$RES_KANAL_ABFRAGEN                => 'RES_KANAL_ABFRAGEN',
+            self::$TEL_KANALNAMEN_AENDERN            => 'TEL_KANALNAMEN_AENDERN',
+            self::$RES_KANALNAMEN_AENDERN            => 'RES_KANALNAMEN_AENDERN',
+            self::$TEL_KANALREIHENFOLGE_AENDERN      => 'TEL_KANALREIHENFOLGE_AENDERN',
+            self::$RES_KANALREIHENFOLGE_AENDERN      => 'RES_KANALREIHENFOLGE_AENDERN',
+            self::$TEL_KANAL_LOESCHEN                => 'TEL_KANAL_LOESCHEN',
+            self::$RES_KANAL_LOESCHEN                => 'RES_KANAL_LOESCHEN',
+            self::$TEL_RAUM_KOPIEREN                 => 'TEL_RAUM_KOPIEREN',
+            self::$RES_RAUM_KOPIEREN                 => 'RES_RAUM_KOPIEREN',
+            self::$TEL_KANAL_IN_RAUM_KOPIEREN        => 'TEL_KANAL_IN_RAUM_KOPIEREN',
+            self::$RES_KANAL_IN_RAUM_KOPIEREN        => 'RES_KANAL_IN_RAUM_KOPIEREN',
+            self::$TEL_AKTOREN_ZUWEISEN              => 'TEL_AKTOREN_ZUWEISEN',
+            self::$RES_AKTOREN_ZUWEISEN              => 'RES_AKTOREN_ZUWEISEN',
+            self::$TEL_INFRASTRUKTUR_SPEICHERN       => 'TEL_INFRASTRUKTUR_SPEICHERN',
+            self::$RES_INFRASTRUKTUR_SPEICHERN       => 'RES_INFRASTRUKTUR_SPEICHERN',
+            self::$TEL_INFRASTRUKTUR_LADEN           => 'TEL_INFRASTRUKTUR_LADEN',
+            self::$RES_INFRASTRUKTUR_LADEN           => 'RES_INFRASTRUKTUR_LADEN',
+            self::$TEL_DEF_INFRASTRUKTUR_SPEICHERN   => 'TEL_DEF_INFRASTRUKTUR_SPEICHERN',
+            self::$RES_DEF_INFRASTRUKTUR_SPEICHERN   => 'RES_DEF_INFRASTRUKTUR_SPEICHERN',
+            self::$TEL_KANALBEDIENUNG                => 'TEL_KANALBEDIENUNG',
+            self::$RES_KANALBEDIENUNG                => 'RES_KANALBEDIENUNG',
+            self::$TEL_POS_RUECKMELDUNG              => 'TEL_POS_RUECKMELDUNG',
+            self::$RES_POS_RUECKMELDUNG              => 'RES_POS_RUECKMELDUNG',
+            self::$TEL_WINKEN                        => 'TEL_WINKEN',
+            self::$RES_WINKEN                        => 'RES_WINKEN',
+            self::$TEL_PASSWORT_ABFRAGE              => 'TEL_PASSWORT_ABFRAGE',
+            self::$RES_PASSWORT_ABFRAGE              => 'RES_PASSWORT_ABFRAGE',
+            self::$TEL_PASSWORT_AENDERN              => 'TEL_PASSWORT_AENDERN',
+            self::$RES_PASSWORT_AENDERN              => 'RES_PASSWORT_AENDERN',
+            self::$TEL_AUTOMATIK                     => 'TEL_AUTOMATIK',
+            self::$RES_AUTOMATIK                     => 'RES_AUTOMATIK',
+            self::$TEL_GRENZWERTE                    => 'TEL_GRENZWERTE',
+            self::$RES_GRENZWERTE                    => 'RES_GRENZWERTE',
+            self::$TEL_RTC                           => 'TEL_RTC',
+            self::$RES_RTC                           => 'RES_RTC',
+            self::$TEL_POLLING                       => 'TEL_POLLING',
+            self::$RES_POLLING                       => 'RES_POLLING',
+            self::$RES_WMS_STACK_BUSY                => 'RES_WMS_STACK_BUSY',
+            self::$RES_ERROR_MESSAGE                 => 'RES_ERROR_MESSAGE',
+            self::$TEL_SPRACHE                       => 'TEL_SPRACHE',
+            self::$RES_SPRACHE                       => 'RES_SPRACHE',
+            self::$TEL_SET_GRENZWERTE                => 'TEL_SET_GRENZWERTE',
+            self::$RES_SET_GRENZWERTE                => 'RES_SET_GRENZWERTE',
+            self::$TEL_SZENE_ANLEGEN                 => 'TEL_SZENE_ANLEGEN',
+            self::$RES_SZENE_ANLEGEN                 => 'RES_SZENE_ANLEGEN',
+            self::$TEL_KANAL_SZENE_ABFRAGEN          => 'TEL_KANAL_SZENE_ABFRAGEN',
+            self::$RES_KANAL_SZENE_ABFRAGEN          => 'RES_KANAL_SZENE_ABFRAGEN',
+            self::$TEL_LESE_MENUETABELLE_FIX         => 'TEL_LESE_MENUETABELLE_FIX',
+            self::$RES_LESE_MENUETABELLE_FIX         => 'RES_LESE_MENUETABELLE_FIX',
+            self::$TEL_LESE_MENUETABELLE_PRODUKT_ABH => 'TEL_LESE_MENUETABELLE_PRODUKT_ABH',
+            self::$RES_LESE_MENUETABELLE_PRODUKT_ABH => 'RES_LESE_MENUETABELLE_PRODUKT_ABH',
+            self::$TEL_LESE_WMS_PARAMETER            => 'TEL_LESE_WMS_PARAMETER',
+            self::$RES_LESE_WMS_PARAMETER            => 'RES_LESE_WMS_PARAMETER',
+            self::$TEL_SCHREIBE_WMS_PARAMETER        => 'TEL_SCHREIBE_WMS_PARAMETER',
+            self::$RES_SCHREIBE_WMS_PARAMETER        => 'RES_SCHREIBE_WMS_PARAMETER',
+            self::$TEL_WMS_INDEX_HEADER_1            => 'TEL_WMS_INDEX_HEADER_1',
+            self::$RES_WMS_INDEX_HEADER_1            => 'RES_WMS_INDEX_HEADER_1',
+            self::$TEL_WMS_INDEX_HEADER_2            => 'TEL_WMS_INDEX_HEADER_2',
+            self::$RES_WMS_INDEX_HEADER_2            => 'RES_WMS_INDEX_HEADER_2',
+            self::$TEL_WMS_INDEX_HEADER_3            => 'TEL_WMS_INDEX_HEADER_3',
+            self::$RES_WMS_INDEX_HEADER_3            => 'RES_WMS_INDEX_HEADER_3',
+            self::$TEL_WMS_INDEX_PARAMETERNAME       => 'TEL_WMS_INDEX_PARAMETERNAME',
+            self::$RES_WMS_INDEX_PARAMETERNAME       => 'RES_WMS_INDEX_PARAMETERNAME',
+            self::$TEL_WMS_RECHTE                    => 'TEL_WMS_RECHTE',
+            self::$RES_WMS_RECHTE                    => 'RES_WMS_RECHTE',
+            self::$TEL_WMS_INDEX_PARAMETERTYP        => 'TEL_WMS_INDEX_PARAMETERTYP',
+            self::$RES_WMS_INDEX_PARAMETERTYP        => 'RES_WMS_INDEX_PARAMETERTYP',
+            self::$TEL_WMS_PARAMETER_DEFAULTWERT     => 'TEL_WMS_PARAMETER_DEFAULTWERT',
+            self::$RES_WMS_PARAMETER_DEFAULTWERT     => 'RES_WMS_PARAMETER_DEFAULTWERT',
+            self::$TEL_GET_WMS_PARAMETER             => 'TEL_GET_WMS_PARAMETER',
+            self::$RES_GET_WMS_PARAMETER             => 'RES_GET_WMS_PARAMETER',
+            self::$TEL_SET_WMS_PARAMETER             => 'TEL_SET_WMS_PARAMETER',
+            self::$RES_SET_WMS_PARAMETER             => 'RES_SET_WMS_PARAMETER',
+            self::$TEL_GET_WMS_PARAMETER_ZSP         => 'TEL_GET_WMS_PARAMETER_ZSP',
+            self::$RES_GET_WMS_PARAMETER_ZSP         => 'RES_GET_WMS_PARAMETER_ZSP',
+            self::$TEL_SET_WMS_PARAMETER_ZSP         => 'TEL_SET_WMS_PARAMETER_ZSP',
+            self::$RES_SET_WMS_PARAMETER_ZSP         => 'RES_SET_WMS_PARAMETER_ZSP',
+            self::$TEL_KOMFORT                       => 'TEL_KOMFORT',
+            self::$RES_KOMFORT                       => 'RES_KOMFORT',
+        ];
+
+        if (isset($code2text[$code])) {
+            $s = $code2text[$code];
+        } else {
+            $s = 'unknown code ' . $code;
+        }
+        return $s;
     }
-     */
+
+    private function decode_befehl($befehl)
+    {
+        $befehl2text = [
+            self::$POLL_KANALBEDIENUNG     => 'POLL_KANALBEDIENUNG',
+            self::$POLL_POSITION           => 'POLL_POSITION',
+            self::$POLL_GRENZWERTE         => 'POLL_GRENZWERTE',
+            self::$POLL_AKTOREN_ZUWEISEN   => 'POLL_AKTOREN_ZUWEISEN',
+            self::$POLL_AUTOMATIK          => 'POLL_AUTOMATIK',
+            self::$POLL_WINKEN             => 'POLL_WINKEN',
+            self::$POLL_SET_GRENZWERTE     => 'POLL_SET_GRENZWERTE',
+            self::$POLL_READ_MENUETAB_FIX  => 'POLL_READ_MENUETAB_FIX',
+            self::$POLL_READ_MENUETAB_PROD => 'POLL_READ_MENUETAB_PROD',
+            self::$POLL_READ_WMS_PARA      => 'POLL_READ_WMS_PARA',
+            self::$POLL_WRITE_WMS_PARA     => 'POLL_WRITE_WMS_PARA',
+            self::$POLL_KOMFORT            => 'POLL_KOMFORT',
+        ];
+
+        if (isset($befehl2text[$befehl])) {
+            $s = $befehl2text[$befehl];
+        } else {
+            $s = 'unknown befehl ' . $befehl;
+        }
+        return $s;
+    }
 }

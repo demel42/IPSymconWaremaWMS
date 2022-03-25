@@ -124,18 +124,24 @@ trait WaremaWMSLocalLib
 
         $associations = [];
         $associations[] = ['Wert' => self::$STATE_OK, 'Name' => $this->Translate('Ok'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_CHANNEL_UNREACHABLE, 'Name' => $this->Translate('Receiver not reachable'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_GATEWAY_UNREACHABLE, 'Name' => $this->Translate('Gateway not reachable'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_CHANNEL_UNREACHABLE, 'Name' => $this->Translate('No reaction'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_GATEWAY_UNREACHABLE, 'Name' => $this->Translate('Gateway error'), 'Farbe' => -1];
         $associations[] = ['Wert' => self::$STATE_BLOCKED_WIND, 'Name' => $this->Translate('Wind alarm'), 'Farbe' => -1];
         $associations[] = ['Wert' => self::$STATE_BLOCKED_RAIN, 'Name' => $this->Translate('Rain alarm '), 'Farbe' => -1];
         $associations[] = ['Wert' => self::$STATE_ERROR, 'Name' => $this->Translate('Error'), 'Farbe' => -1];
         $this->CreateVarProfile('WaremaWMS.State', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
 
         $associations = [];
+        $associations[] = ['Wert' => self::$CONTROL_UP, 'Name' => $this->Translate('Retract'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CONTROL_STOP, 'Name' => $this->Translate('Stop'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CONTROL_DOWN, 'Name' => $this->Translate('Extend'), 'Farbe' => -1];
+        $this->CreateVarProfile('WaremaWMS.ControlAwning', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
+
+        $associations = [];
         $associations[] = ['Wert' => self::$CONTROL_UP, 'Name' => $this->Translate('Up'), 'Farbe' => -1];
         $associations[] = ['Wert' => self::$CONTROL_STOP, 'Name' => $this->Translate('Stop'), 'Farbe' => -1];
         $associations[] = ['Wert' => self::$CONTROL_DOWN, 'Name' => $this->Translate('Down'), 'Farbe' => -1];
-        $this->CreateVarProfile('WaremaWMS.Control3', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
+        $this->CreateVarProfile('WaremaWMS.ControlBlind', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
 
         $associations = [];
         $associations[] = ['Wert' => self::$ACTIVITY_STAND, 'Name' => $this->Translate('Stand'), 'Farbe' => -1];
