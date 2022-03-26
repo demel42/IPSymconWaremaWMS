@@ -148,10 +148,7 @@ trait WaremaWMSLocalLib
         $associations[] = ['Wert' => self::$ACTIVITY_MOVES, 'Name' => $this->Translate('Moves'), 'Farbe' => -1];
         $this->CreateVarProfile('WaremaWMS.Activity', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
 
-        $associations = [];
-        $associations[] = ['Wert' => 0, 'Name' => '%.0f %%', 'Farbe' => -1];
-        $associations[] = ['Wert' => 255, 'Name' => '-', 'Farbe' => -1];
-        $this->CreateVarProfile('WaremaWMS.Position', VARIABLETYPE_INTEGER, '', 0, 100, 5, 0, '', $associations, $reInstall);
+        $this->CreateVarProfile('WaremaWMS.Position', VARIABLETYPE_INTEGER, ' %', 0, 100, 1, 0, 'Intensity', [], $reInstall);
     }
 
     private function LangMapping()

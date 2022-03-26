@@ -20,7 +20,7 @@ class WaremaWMSDevice extends IPSModule
         $this->RegisterPropertyInteger('channel_id', 0);
         $this->RegisterPropertyInteger('product', 0);
 
-        $this->RegisterPropertyInteger('update_interval', 60);
+        $this->RegisterPropertyInteger('update_interval', 15);
 
         $this->InstallVarProfiles(false);
 

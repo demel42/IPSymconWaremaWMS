@@ -16,9 +16,18 @@
 
 ## 1. Funktionsumfang
 
+Steuerung der Warema WMS-Komponenten, unterstützt wird zur Zeit:<br>
+- Markise, Markise mit Windsensor
+
+Weitere WMS-Komponenten sind grundsätzlich auch ansteuerbar, mangels Verfügbarkeit jedoch noch nicht ausprogrammiert. Bei Bedarf bitte an den Autor wenden.
+
 ## 2. Voraussetzungen
 
 - IP-Symcon ab Version 6.0
+- Warema WebControl (nicht Warema WebControl Pro via Warema Cloud)
+eingelernt im WMS
+
+Es ist möglich, das eine WebControl Pro im Hausnetz genauso wie ein WebControl funktioniert, würde ich aber nicht vonb ausgehen.
 
 ## 3. Installation
 
@@ -29,12 +38,41 @@ Alternativ kann das Modul über [Module Control](https://www.symcon.de/service/d
 
 ### b. Einrichtung in IPS
 
-#### WaremaWMSIO
-#### WaremaWMSConfig
+#### Warema WMS IO
+In IP-Symcon nun unterhalb von _I/O Instanzen_ die Funktion _Instanz hinzufügen_ auswählen und als Hersteller _Warema_ angeben.
+In der IO-Instanz muss nur der Hostname/die IP-Adresse des WebControl angegeben werden.
+Mittels _Zugriff prüfen_ kann getestet werden (Hinweis: dauert ein paar Sekunden)
+
+#### Warema WMS Config
+In IP-Symcon nun unterhalb von _Konfigurator Instanzen_ die Funktion _Instanz hinzufügen_ auswählen und als Hersteller _Warema_ angeben.
+In dem Konfigurator werden nun alle eingerichteten Räume/Kanäle aufgelistet; eine Anlage der Geräte-Instanz kann entsprechend erfolgen
+
+#### Warema WMS Device
+Die Geräte-Instanz wird über dem Konfigurator angelegt. In der _Basis-Konfiguration_ ist Raum/Kanal sowie der Produkt-Typ eingetragen. Achtung: die Warema-Komponenten werden via Raum+Kanal angesprochen, bei Änderung der Zuordnung muss das ggfs. nachgeführt werden.
 
 ## 4. Funktionsreferenz
 
+alle Funktionen sind über _RequestAction_ der jew. Variablen ansteuerbar
+
 ## 5. Konfiguration
+
+### Warema WMS IO
+
+#### Properties
+
+| Eigenschaft               | Typ      | Standardwert | Beschreibung |
+| :------------------------ | :------  | :----------- | :----------- |
+| Instanz deaktivieren      | boolean  | false        | Instanz temporär deaktivieren |
+|                           |          |              | |
+| WMS-Schnittstelle         | integer  | 0            | 0=WebControl |
+| Hostname of WebControl    | string   |              | Hostname / ƢP-Adresse des WebControl |
+
+
+#### Aktionen
+
+| Bezeichnung                | Beschreibung |
+| :------------------------- | :----------- |
+| Zugriff prüfen             | Auflistung der Konfiguration |
 
 ### WaremaWMSConfig
 
@@ -42,12 +80,7 @@ Alternativ kann das Modul über [Module Control](https://www.symcon.de/service/d
 
 | Eigenschaft               | Typ      | Standardwert | Beschreibung |
 | :------------------------ | :------  | :----------- | :----------- |
-
-#### Aktionen
-
-| Bezeichnung                | Beschreibung |
-| :------------------------- | :----------- |
-
+| Kategorie                 | integer  | 0            | Kategorie zu Anlage von Instanzen |
 
 ### WaremaWMSDevice
 
@@ -57,24 +90,27 @@ Alternativ kann das Modul über [Module Control](https://www.symcon.de/service/d
 | :------------------------ | :------  | :----------- | :----------- |
 | Instanz deaktivieren      | boolean  | false        | Instanz temporär deaktivieren |
 |                           |          |              | |
+| Raum-ID                   | integer  |              | Raum-Index |
+| Kanal-ID                  | integer  |              | Kanal-Index |
+| Produkt                   | integer  |              | Produkt-Typ |
+|                           |          |              | |
+| Aktualisierungsintervall  | integer  | 15           | Intervall in Sekunden |
 
 #### Aktionen
 
 | Bezeichnung                | Beschreibung |
 | :------------------------- | :----------- |
-
-### Test-Bereich
-
-### Experten-Bereich
+| Status aktualisieren       | Abfragen des Status (z.B. Position, Aktivität) |
 
 ### Variablenprofile
 
 Es werden folgende Variablenprofile angelegt:
-* Boolean<br>
-
 * Integer<br>
-
-* Float<br>
+WaremaWMS.Activity,
+WaremaWMS.ControlAwning,
+WaremaWMS.ControlBlind,
+WaremaWMS.Position,
+WaremaWMS.State
 
 ## 6. Anhang
 
@@ -90,5 +126,5 @@ GUIDs
 
 ## 7. Versions-Historie
 
-- 0.9 @ 25.03.2022 12:16 (test)
+- 1.0 @ 26.03.2022 17:14
   - Initiale Version
