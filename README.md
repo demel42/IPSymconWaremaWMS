@@ -126,5 +126,8 @@ GUIDs
 
 ## 7. Versions-Historie
 
+- 1.1 @ 08.04.2022 10:12
+  - Korrektur bei der Berechnung der Postion(en)
+
 - 1.0 @ 26.03.2022 17:14
   - Initiale Version

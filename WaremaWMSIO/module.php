@@ -748,6 +748,9 @@ class WaremaWMSIO extends IPSModule
                 if (isset($response['position'])) {
                     $i = intval($response['position']);
                     if ($i != 255) {
+                        if ($i % 2) {
+                            $i++;
+                        }
                         $r['position'] = (int) ($i / 2);
                     }
                 }
@@ -760,12 +763,18 @@ class WaremaWMSIO extends IPSModule
                 if (isset($response['positionvolant1'])) {
                     $i = intval($response['positionvolant1']);
                     if ($i != 255) {
+                        if ($i % 2) {
+                            $i++;
+                        }
                         $r['positionvolant1'] = (int) ($i / 2);
                     }
                 }
                 if (isset($response['positionvolant2'])) {
                     $i = intval($response['positionvolant2']);
                     if ($i != 255) {
+                        if ($i % 2) {
+                            $i++;
+                        }
                         $r['positionvolant2'] = (int) ($i / 2);
                     }
                 }
