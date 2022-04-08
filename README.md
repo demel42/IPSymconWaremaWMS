@@ -127,7 +127,7 @@ GUIDs
 ## 7. Versions-Historie
 
 - 1.1.1 @ 08.04.2022 16:04
-  - Konfigurator zeigt nun auch Instanzen an, die nicht mehr zu den vorhadenen Geräten passen
+  - Konfigurator zeigt nun auch Instanzen an, die nicht mehr zu den vorhandenen Geräten passen
 
 - 1.1 @ 08.04.2022 10:12
   - Korrektur bei der Berechnung der Postion(en)
