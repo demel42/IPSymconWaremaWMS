@@ -91,9 +91,11 @@ class WaremaWMSConfig extends IPSModule
         $r = json_decode($ret, true);
         $devices = isset($r['Data']) ? $r['Data'] : false;
         $this->SendDebug(__FUNCTION__, 'devices=' . print_r($devices, true), 0);
+
+        $guid = '{DAC4B9CA-4754-8292-3B64-6A825163AB09}';
+        $instIDs = IPS_GetInstanceListByModuleID($guid);
+
         if (is_array($devices) && count($devices)) {
-            $guid = '{DAC4B9CA-4754-8292-3B64-6A825163AB09}';
-            $instIDs = IPS_GetInstanceListByModuleID($guid);
             foreach ($devices as $device) {
                 $this->SendDebug(__FUNCTION__, 'device=' . print_r($device, true), 0);
                 $room_id = $device['room_id'];
@@ -137,6 +139,39 @@ class WaremaWMSConfig extends IPSModule
                 $config_list[] = $entry;
                 $this->SendDebug(__FUNCTION__, 'entry=' . print_r($entry, true), 0);
             }
+        }
+        foreach ($instIDs as $instID) {
+            $fnd = false;
+            foreach ($config_list as $entry) {
+                if ($entry['instanceID'] == $instID) {
+                    $fnd = true;
+                    break;
+                }
+            }
+            if ($fnd) {
+                continue;
+            }
+
+            $room_id = IPS_GetProperty($instID, 'room_id');
+            $channel_id = IPS_GetProperty($instID, 'channel_id');
+            $name = IPS_GetName($instID);
+            $room_name = '';
+            $channel_name = '';
+            $product = (int) IPS_GetProperty($instID, 'product');
+            $product_name = $this->DecodeProduct($product);
+
+            $entry = [
+                'instanceID'   => $instID,
+                'name'         => $name,
+                'room_id'      => $room_id,
+                'channel_id'   => $channel_id,
+                'room_name'    => $room_name,
+                'channel_name' => $channel_name,
+                'product_name' => $product_name,
+            ];
+
+            $config_list[] = $entry;
+            $this->SendDebug(__FUNCTION__, 'missing entry=' . print_r($entry, true), 0);
         }
         return $config_list;
     }
