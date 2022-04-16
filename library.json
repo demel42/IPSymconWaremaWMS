@@ -1,12 +1,12 @@
 {
-    "id": "{275F8086-2BAE-0114-374B-B871E0564EAB}",
-    "name": "Warema WMS",
-    "author": "Ch. Damsky",
-    "url": "https://github.com/demel42/IPSymconWaremaWMS.git",
-    "compatibility": {
-        "version": "6.0"
-    },
-    "version": "1.1.2",
-    "build": 0,
-    "date": 1649857803
+	"id": "{275F8086-2BAE-0114-374B-B871E0564EAB}",
+	"name": "Warema WMS",
+	"author": "Ch. Damsky",
+	"url": "https://github.com/demel42/IPSymconWaremaWMS.git",
+	"compatibility": {
+		"version": "6.0"
+	},
+	"version": "1.1.2",
+	"build": 0,
+	"date": 1650103346
 }

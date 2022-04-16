@@ -1,16 +1,18 @@
 {
-    "id": "{657F43A7-9122-0568-5E0C-3301A6DFFAF5}",
-    "name": "Warema WMS Config",
-    "type": 4,
-    "vendor": "Warema",
-    "aliases": [ "Warema WMS Konfigurator" ],
-    "parentRequirements": [
-        "{A8C43E67-9C5C-8A22-1F46-69EC56138C81}"
-    ],
-    "childRequirements": [],
-    "implemented": [
+	"id": "{657F43A7-9122-0568-5E0C-3301A6DFFAF5}",
+	"name": "Warema WMS Config",
+	"type": 4,
+	"vendor": "Warema",
+	"aliases": [
+		"Warema WMS Konfigurator"
+	],
+	"parentRequirements": [
+		"{A8C43E67-9C5C-8A22-1F46-69EC56138C81}"
+	],
+	"childRequirements": [],
+	"implemented": [
 		"{B78E405B-23E3-10A5-4B26-F24277883F96}"
 	],
-    "prefix": "WMS",
-    "url": "https://github.com/demel42/IPSymconWaremaWMS/blob/master/README.md"
+	"prefix": "WMS",
+	"url": "https://github.com/demel42/IPSymconWaremaWMS/blob/master/README.md"
 }

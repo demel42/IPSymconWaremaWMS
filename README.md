@@ -126,8 +126,9 @@ GUIDs
 
 ## 7. Versions-Historie
 
-- 1.1.2 @ 13.04.2022 15:50
+- 1.1.2 @ 16.04.2022 12:02
   - potentieller Namenskonflikt behoben (trait CommonStubs)
+  - Aktualisierung von submodule CommonStubs
 
 - 1.1.1 @ 08.04.2022 16:04
   - Konfigurator zeigt nun auch Instanzen an, die nicht mehr zu den vorhandenen Geräten passen
