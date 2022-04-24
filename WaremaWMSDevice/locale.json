@@ -4,6 +4,22 @@
 			"Warema WebControl Device": "Warema WebControl Gerät",
 
 			"Instance has no active parent instance": "Instanz hat keine aktive übergeordnete Instanz",
+
+			"The following points of the configuration are incorrect": "Die folgenden Punkte der Konfiguration sind fehlerhaft",
+
+			"The following system prerequisites are missing": "Folgende Systemvoraussetzungen fehlen",
+
+			"Still something to do to complete the update": "Es ist noch etwas zu tun, um das Update abzuschließen",
+			"old version": "alte Version",
+			"new version": "neue Version",
+			"unknwon": "unbekannt",
+			"The use of possible affected status variables can be checked in the expansion panel \"References\"":
+				"Die Verwendung möglicherweise betroffener Statusvariablen kann im Erweiterungspanel \"Referenzen\" überprüft werden",
+			"Press button 'Complete update' to carry out the required work": "Taste 'Update abschliessen' betätigen um die erforderlichen Arbeiten auszuführen",
+			"Complete update": "Update abschliessen",
+			"Unable to complete the update": "Das Update kann nicht abgeschlossen werden",
+			"please contact the author": "Bitte kontaktieren Sie den Autor",
+
 			"Disable instance": "Instanz deaktivieren",
 
 			"Basic configuration (don't change)": "Basis-Konfiguration (nicht ändern)",
@@ -18,27 +34,33 @@
 			"Awning": "Markise",
 			"Awning with windsensor": "Markise mit Windsensor",
 
-			"Ok": "Ok",
-			"Gateway error": "Gateway-Fehler ",
-			"No response": "keine Antwort",
-			"Wind alarm": "Wind-Alarm",
-			"Rain alarm": "Regen-Alarm",
-			"Error": "Fehler",
-
-			"Retract": "Einfahren",
-			"Up": "Auf",
-			"Stop": "Stop",
-			"Down": "Ab",
-			"Extend": "Ausfahren",
-
-			"Stand": "steht",
-			"Moves": "fährt",
-			
 			"State": "Status",
 			"Position": "Position",
 			"Control": "Steuerung",
 			"Activity": "Aktivität",
 			"Last status update": "letze Aktualisierung",
+
+			"__variableprofile__": "WaremaWMS.State",
+			"Ok": "Ok",
+			"Gateway error": "Gateway-Fehler",
+			"No response": "keine Antwort",
+			"Wind alarm": "Wind-Alarm",
+			"Rain alarm": "Regen-Alarm",
+			"Error": "Fehler",
+
+			"__variableprofile__": "WaremaWMS.ControlAwning",
+			"Retract": "Einfahren",
+			"Stop": "Stop",
+			"Extend": "Ausfahren",
+
+			"__variableprofile__": "WaremaWMS.ControlBlind",
+			"Up": "Auf",
+			"Stop": "Stop",
+			"Down": "Ab",
+
+			"__variableprofile__": "WaremaWMS.Activity",
+			"Stand": "steht",
+			"Moves": "fährt",
 
 			"Update status": "Status aktualisieren",
 
@@ -75,6 +97,7 @@
 			"Next run": "nächste Ausführung",
 			"Last run": "letzte Ausführung",
 			"Timer information": "Timer-Information",
+			"Refresh references panel": "Referenzen-Panel aktualisieren",
 
 			"Instance getting created": "Instanz wird erstellt",
 			"Instance is active": "Instanz ist aktiv",
@@ -82,7 +105,12 @@
 			"Instance is inactive": "Instanz ist inaktiv",
 			"Instance is not created": "Instanz wurde nicht erzeugt",
 
+			"Instance is inactive (invalid preconditions)": "Instanz ist inaktiv (ungültige Voraussetzungen)",
+			"Instance is inactive (update not completed)": "Instanz ist inaktiv (Update nicht abgeschlossen)",
 			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)",
+			"Instance is inactive (deactivated)": "Instanz ist inaktiv (deaktiviert)",
+			"Instance is inactive (no Symcon-Connect)": "Instanz ist inaktiv (kein Symcon-Connect)",
+
 			"Instance is inactive (server error)": "Instanz ist inaktiv (Serverfehler)",
 			"Instance is inactive (http error)": "Instanz ist inaktiv (HTTP-Fehler)",
 			"Instance is inactive (invalid data)": "Instanz ist inaktiv (ungültige Daten)",

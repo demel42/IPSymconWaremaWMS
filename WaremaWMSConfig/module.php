@@ -16,38 +16,34 @@ class WaremaWMSConfig extends IPSModule
 
         $this->RegisterPropertyInteger('ImportCategoryID', 0);
 
+        $this->RegisterAttributeString('UpdateInfo', '');
+
         $this->ConnectParent('{6A9BBD57-8473-682D-4ABF-009AE8584B2B}');
-    }
-
-    private function CheckConfiguration()
-    {
-        $s = '';
-        $r = [];
-
-        if ($r != []) {
-            $s = $this->Translate('The following points of the configuration are incorrect') . ':' . PHP_EOL;
-            foreach ($r as $p) {
-                $s .= '- ' . $p . PHP_EOL;
-            }
-        }
-
-        return $s;
     }
 
     public function ApplyChanges()
     {
         parent::ApplyChanges();
 
-        $refs = $this->GetReferenceList();
-        foreach ($refs as $ref) {
-            $this->UnregisterReference($ref);
-        }
         $propertyNames = ['ImportCategoryID'];
-        foreach ($propertyNames as $name) {
-            $oid = $this->ReadPropertyInteger($name);
-            if ($oid >= 10000) {
-                $this->RegisterReference($oid);
-            }
+        $this->MaintainReferences($propertyNames);
+
+        if ($this->CheckPrerequisites() != false) {
+            // $this->MaintainTimer('UpdateStatus', 0);
+            $this->SetStatus(self::$IS_INVALIDPREREQUISITES);
+            return;
+        }
+
+        if ($this->CheckUpdate() != false) {
+            // $this->MaintainTimer('UpdateStatus', 0);
+            $this->SetStatus(self::$IS_UPDATEUNCOMPLETED);
+            return;
+        }
+
+        if ($this->CheckConfiguration() != false) {
+            // $this->MaintainTimer('UpdateStatus', 0);
+            $this->SetStatus(self::$IS_INVALIDCONFIG);
+            return;
         }
 
         $this->SetStatus(IS_ACTIVE);
@@ -178,22 +174,10 @@ class WaremaWMSConfig extends IPSModule
 
     private function GetFormElements()
     {
-        $formElements = [];
+        $formElements = $this->GetCommonFormElements('Warema WMS configurator');
 
-        $formElements[] = [
-            'type'    => 'Label',
-            'caption' => 'Warema WMS configurator'
-        ];
-
-        @$s = $this->CheckConfiguration();
-        if ($s != '') {
-            $formElements[] = [
-                'type'    => 'Label',
-                'caption' => $s,
-            ];
-            $formElements[] = [
-                'type'    => 'Label',
-            ];
+        if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
+            return $formElements;
         }
 
         $formElements[] = [
@@ -203,7 +187,7 @@ class WaremaWMSConfig extends IPSModule
         ];
 
         $entries = $this->getConfiguratorValues();
-        $configurator = [
+        $formElements[] = [
             'type'    => 'Configurator',
             'caption' => 'Devices',
 
@@ -233,9 +217,8 @@ class WaremaWMSConfig extends IPSModule
                     'width'   => '400px'
                 ]
             ],
-            'values' => $entries
+            'values' => $entries,
         ];
-        $formElements[] = $configurator;
 
         return $formElements;
     }
@@ -244,8 +227,17 @@ class WaremaWMSConfig extends IPSModule
     {
         $formActions = [];
 
-        $formActions[] = $this->GetInformationForm();
-        $formActions[] = $this->GetReferencesForm();
+        if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
+            $formActions[] = $this->GetCompleteUpdateFormAction();
+
+            $formActions[] = $this->GetInformationFormAction();
+            $formActions[] = $this->GetReferencesFormAction();
+
+            return $formActions;
+        }
+
+        $formActions[] = $this->GetInformationFormAction();
+        $formActions[] = $this->GetReferencesFormAction();
 
         return $formActions;
     }

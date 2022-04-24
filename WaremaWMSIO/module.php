@@ -179,12 +179,13 @@ class WaremaWMSIO extends IPSModule
 
         $this->RegisterAttributeInteger('command_counter', 1);
 
+        $this->RegisterAttributeString('UpdateInfo', '');
+
         $this->InstallVarProfiles(false);
     }
 
-    private function CheckConfiguration()
+    private function CheckModuleConfiguration()
     {
-        $s = '';
         $r = [];
 
         $interface = $this->ReadPropertyInteger('interface');
@@ -194,37 +195,22 @@ class WaremaWMSIO extends IPSModule
             $r[] = $this->Translate('Host must be specified');
         }
 
-        if ($r != []) {
-            $s = $this->Translate('The following points of the configuration are incorrect') . ':' . PHP_EOL;
-            foreach ($r as $p) {
-                $s .= '- ' . $p . PHP_EOL;
-            }
-        }
-
-        return $s;
+        return $r;
     }
 
     public function ApplyChanges()
     {
         parent::ApplyChanges();
 
-        $vpos = 0;
+        $this->MaintainReferences();
 
-        $refs = $this->GetReferenceList();
-        foreach ($refs as $ref) {
-            $this->UnregisterReference($ref);
-        }
-        $propertyNames = [];
-        foreach ($propertyNames as $name) {
-            $oid = $this->ReadPropertyInteger($name);
-            if ($oid >= 10000) {
-                $this->RegisterReference($oid);
-            }
+        if ($this->CheckPrerequisites() != false) {
+            $this->SetStatus(self::$IS_INVALIDPREREQUISITES);
+            return;
         }
 
-        $module_disable = $this->ReadPropertyBoolean('module_disable');
-        if ($module_disable) {
-            $this->SetStatus(IS_INACTIVE);
+        if ($this->CheckUpdate() != false) {
+            $this->SetStatus(self::$IS_UPDATEUNCOMPLETED);
             return;
         }
 
@@ -233,27 +219,23 @@ class WaremaWMSIO extends IPSModule
             return;
         }
 
+        $module_disable = $this->ReadPropertyBoolean('module_disable');
+        if ($module_disable) {
+            $this->SetStatus(self::$IS_DEACTIVATED);
+            return;
+        }
+
         $this->SetStatus(IS_ACTIVE);
     }
 
     protected function GetFormElements()
     {
-        $formElements = [];
+        $formElements = $this->GetCommonFormElements('Warema WMS I/O');
 
-        $formElements[] = [
-            'type'    => 'Label',
-            'caption' => 'Warema WMS IO'
-        ];
+		$this->SendDebug(__FUNCTION__, 'formElements='.print_r($formElements,true),0);
 
-        @$s = $this->CheckConfiguration();
-        if ($s != '') {
-            $formElements[] = [
-                'type'    => 'Label',
-                'caption' => $s
-            ];
-            $formElements[] = [
-                'type'    => 'Label',
-            ];
+        if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
+            return $formElements;
         }
 
         $formElements[] = [
@@ -285,10 +267,19 @@ class WaremaWMSIO extends IPSModule
     {
         $formActions = [];
 
+        if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
+            $formActions[] = $this->GetCompleteUpdateFormAction();
+
+            $formActions[] = $this->GetInformationFormAction();
+            $formActions[] = $this->GetReferencesFormAction();
+
+            return $formActions;
+        }
+
         $formActions[] = [
             'type'    => 'Button',
             'caption' => 'Test access',
-            'onClick' => 'WMS_TestAccess($id);'
+            'onClick' => $this->GetModulePrefix() . '_TestAccess($id);'
         ];
 
         $items = [];
@@ -310,7 +301,7 @@ class WaremaWMSIO extends IPSModule
                     [
                         'type'    => 'Button',
                         'caption' => 'Decode',
-                        'onClick' => 'WMS_DecodeProtocol($id, $protocol);'
+                        'onClick' => $this->GetModulePrefix() . '_DecodeProtocol($id, $protocol);'
                     ],
                     [
                         'type'    => 'Label',
@@ -321,7 +312,7 @@ class WaremaWMSIO extends IPSModule
         $items[] = [
             'type'    => 'Button',
             'caption' => 'Re-install variable-profiles',
-            'onClick' => 'WMS_InstallVarProfiles($id, true);'
+            'onClick' => $this->GetModulePrefix() . '_InstallVarProfiles($id, true);'
         ];
 
         $formActions[] = [
@@ -342,15 +333,15 @@ class WaremaWMSIO extends IPSModule
             ]
         ];
 
-        $formActions[] = $this->GetInformationForm();
-        $formActions[] = $this->GetReferencesForm();
+        $formActions[] = $this->GetInformationFormAction();
+        $formActions[] = $this->GetReferencesFormAction();
 
         return $formActions;
     }
 
-    public function RequestAction($Ident, $Value)
+    public function RequestAction($ident, $value)
     {
-        if ($this->CommonRequestAction($Ident, $Value)) {
+        if ($this->CommonRequestAction($ident, $value)) {
             return;
         }
 
@@ -359,9 +350,9 @@ class WaremaWMSIO extends IPSModule
             return;
         }
 
-        switch ($Ident) {
+        switch ($ident) {
             default:
-                $this->SendDebug(__FUNCTION__, 'invalid ident ' . $Ident, 0);
+                $this->SendDebug(__FUNCTION__, 'invalid ident ' . $ident, 0);
                 break;
         }
     }

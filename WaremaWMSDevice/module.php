@@ -22,26 +22,13 @@ class WaremaWMSDevice extends IPSModule
 
         $this->RegisterPropertyInteger('update_interval', 15);
 
+        $this->RegisterAttributeString('UpdateInfo', '');
+
         $this->InstallVarProfiles(false);
 
-        $this->RegisterTimer('UpdateStatus', 0, 'WMS_UpdateStatus(' . $this->InstanceID . ');');
+        $this->RegisterTimer('UpdateStatus', 0, $this->GetModulePrefix() . '_UpdateStatus(' . $this->InstanceID . ');');
 
         $this->ConnectParent('{6A9BBD57-8473-682D-4ABF-009AE8584B2B}');
-    }
-
-    private function CheckConfiguration()
-    {
-        $s = '';
-        $r = [];
-
-        if ($r != []) {
-            $s = $this->Translate('The following points of the configuration are incorrect') . ':' . PHP_EOL;
-            foreach ($r as $p) {
-                $s .= '- ' . $p . PHP_EOL;
-            }
-        }
-
-        return $s;
     }
 
     private function product2options($product)
@@ -71,6 +58,26 @@ class WaremaWMSDevice extends IPSModule
     {
         parent::ApplyChanges();
 
+        $this->MaintainReferences();
+
+        if ($this->CheckPrerequisites() != false) {
+            $this->MaintainTimer('UpdateStatus', 0);
+            $this->SetStatus(self::$IS_INVALIDPREREQUISITES);
+            return;
+        }
+
+        if ($this->CheckUpdate() != false) {
+            $this->MaintainTimer('UpdateStatus', 0);
+            $this->SetStatus(self::$IS_UPDATEUNCOMPLETED);
+            return;
+        }
+
+        if ($this->CheckConfiguration() != false) {
+            $this->MaintainTimer('UpdateStatus', 0);
+            $this->SetStatus(self::$IS_INVALIDCONFIG);
+            return;
+        }
+
         $product = $this->ReadPropertyInteger('product');
         $options = $this->product2options($product);
         $this->SendDebug(__FUNCTION__, 'options=' . print_r($options, true), 0);
@@ -98,28 +105,10 @@ class WaremaWMSDevice extends IPSModule
 
         $this->SetSummary($this->DecodeProduct($product));
 
-        $refs = $this->GetReferenceList();
-        foreach ($refs as $ref) {
-            $this->UnregisterReference($ref);
-        }
-        $propertyNames = [];
-        foreach ($propertyNames as $name) {
-            $oid = $this->ReadPropertyInteger($name);
-            if ($oid >= 10000) {
-                $this->RegisterReference($oid);
-            }
-        }
-
         $module_disable = $this->ReadPropertyBoolean('module_disable');
         if ($module_disable) {
-            $this->SetUpdateInterval(0);
-            $this->SetStatus(IS_INACTIVE);
-            return;
-        }
-
-        if ($this->CheckConfiguration() != false) {
-            $this->SetUpdateInterval(0);
-            $this->SetStatus(self::$IS_INVALIDCONFIG);
+            $this->MaintainTimer('UpdateStatus', 0);
+            $this->SetStatus(self::$IS_DEACTIVATED);
             return;
         }
 
@@ -129,22 +118,10 @@ class WaremaWMSDevice extends IPSModule
 
     protected function GetFormElements()
     {
-        $formElements = [];
+        $formElements = $this->GetCommonFormElements('Warema WMS Device');
 
-        $formElements[] = [
-            'type'    => 'Label',
-            'caption' => 'Warema WMS Device'
-        ];
-
-        @$s = $this->CheckConfiguration();
-        if ($s != '') {
-            $formElements[] = [
-                'type'    => 'Label',
-                'caption' => $s
-            ];
-            $formElements[] = [
-                'type'    => 'Label',
-            ];
+        if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
+            return $formElements;
         }
 
         $formElements[] = [
@@ -173,7 +150,6 @@ class WaremaWMSDevice extends IPSModule
                     'caption'  => 'Product'
                 ],
             ],
-
             'caption' => 'Basic configuration (don\'t change)'
         ];
 
@@ -182,7 +158,7 @@ class WaremaWMSDevice extends IPSModule
             'minimum' => 0,
             'suffix'  => 'Seconds',
             'name'    => 'update_interval',
-            'caption' => 'Update status interval'
+            'caption' => 'Update status interval',
         ];
 
         return $formElements;
@@ -192,10 +168,19 @@ class WaremaWMSDevice extends IPSModule
     {
         $formActions = [];
 
+        if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
+            $formActions[] = $this->GetCompleteUpdateFormAction();
+
+            $formActions[] = $this->GetInformationFormAction();
+            $formActions[] = $this->GetReferencesFormAction();
+
+            return $formActions;
+        }
+
         $formActions[] = [
             'type'    => 'Button',
             'caption' => 'Update status',
-            'onClick' => 'WMS_UpdateStatus($id);'
+            'onClick' => $this->GetModulePrefix() . '_UpdateStatus($id);'
         ];
 
         $formActions[] = [
@@ -206,7 +191,7 @@ class WaremaWMSDevice extends IPSModule
                 [
                     'type'    => 'Button',
                     'caption' => 'Re-install variable-profiles',
-                    'onClick' => 'WMS_InstallVarProfiles($id, true);'
+                    'onClick' => $this->GetModulePrefix() . '_InstallVarProfiles($id, true);'
                 ],
             ],
         ];
@@ -221,8 +206,8 @@ class WaremaWMSDevice extends IPSModule
             ]
         ];
 
-        $formActions[] = $this->GetInformationForm();
-        $formActions[] = $this->GetReferencesForm();
+        $formActions[] = $this->GetInformationFormAction();
+        $formActions[] = $this->GetReferencesFormAction();
 
         return $formActions;
     }
@@ -277,8 +262,7 @@ class WaremaWMSDevice extends IPSModule
             $sec = $this->ReadPropertyInteger('update_interval');
         }
         $msec = $sec > 0 ? $sec * 1000 : 0;
-        $this->SendDebug(__FUNCTION__, 'msec=' . $msec, 0);
-        $this->SetTimerInterval('UpdateStatus', $msec);
+        $this->MaintainTimer('UpdateStatus', $msec);
     }
 
     public function UpdateStatus()
