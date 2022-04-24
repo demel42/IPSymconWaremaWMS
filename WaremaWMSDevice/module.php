@@ -262,7 +262,7 @@ class WaremaWMSDevice extends IPSModule
             $sec = $this->ReadPropertyInteger('update_interval');
         }
         $msec = $sec > 0 ? $sec * 1000 : 0;
-        $this->MaintainTimer('UpdateStatus', $msec);
+        $this->MaintainTimer('UpdateStatus', (int) $msec);
     }
 
     public function UpdateStatus()
