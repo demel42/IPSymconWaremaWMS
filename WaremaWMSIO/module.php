@@ -232,8 +232,6 @@ class WaremaWMSIO extends IPSModule
     {
         $formElements = $this->GetCommonFormElements('Warema WMS I/O');
 
-		$this->SendDebug(__FUNCTION__, 'formElements='.print_r($formElements,true),0);
-
         if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
             return $formElements;
         }
