@@ -126,8 +126,9 @@ GUIDs
 
 ## 7. Versions-Historie
 
-- 1.2.1 @ 26.04.2022 12:14
+- 1.2.1 @ 27.04.2022 17:10
   - Korrektur: self::$IS_DEACTIVATED wieder IS_INACTIVE
+  - interne Änderungen
 
 - 1.2 @ 24.04.2022 15:34
   - Übersetzung vervollständigt

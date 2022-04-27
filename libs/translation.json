@@ -1,0 +1,42 @@
+{
+	"translations": {
+		"de": {
+			"__variableprofile__": "WaremaWMS.State",
+			"Ok": "Ok",
+			"Gateway error": "Gateway-Fehler",
+			"No response": "keine Antwort",
+			"Wind alarm": "Wind-Alarm",
+			"Rain alarm": "Regen-Alarm",
+			"Error": "Fehler",
+
+			"__variableprofile__": "WaremaWMS.ControlAwning",
+			"Retract": "Einfahren",
+			"Stop": "Stop",
+			"Extend": "Ausfahren",
+
+			"__variableprofile__": "WaremaWMS.ControlBlind",
+			"Up": "Auf",
+			"Stop": "Stop",
+			"Down": "Ab",
+
+			"__variableprofile__": "WaremaWMS.Activity",
+			"Stand": "steht",
+			"Moves": "fährt",
+
+			"__options__": "Product",
+			"Awning": "Markise",
+			"Awning with windsensor": "Markise mit Windsensor",
+
+			"__options__": "Interface",
+			"WebControl": "WebControl",
+
+			"__status__": "",
+			"Instance is inactive (server error)": "Instanz ist inaktiv (Serverfehler)",
+			"Instance is inactive (http error)": "Instanz ist inaktiv (HTTP-Fehler)",
+			"Instance is inactive (invalid data)": "Instanz ist inaktiv (ungültige Daten)",
+			"Instance is inactive (appliance failure)": "Instanz ist inaktiv (Gerätefehler)",
+
+			"__end__": ""
+		}
+	}
+}

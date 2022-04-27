@@ -168,6 +168,15 @@ class WaremaWMSIO extends IPSModule
     private static $DEF_MAXRAUM = 20;
     private static $DEF_MAXKANAL = 10;
 
+    private $ModuleDir;
+
+    public function __construct(string $InstanceID)
+    {
+        parent::__construct($InstanceID);
+
+        $this->ModuleDir = __DIR__;
+    }
+
     public function Create()
     {
         parent::Create();

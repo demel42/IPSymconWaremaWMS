@@ -1,0 +1,49 @@
+{
+	"translations": {
+		"de": {
+			"Warema WMS I/O": "Warema WMS I/O",
+
+			"__function__": "CheckConfiguration",
+			"Host must be specified": "Host muss angegeben werden",
+
+			"__properties__": "",
+			"Disable instance": "Instanz deaktivieren",
+
+			"Hostname of WebControl": "Hostname des WebControl",
+
+			"Warema WMS WebControl configuration": "Warema WMS WebControl Konfiguration",
+
+			"Language": "Sprache",
+			"unknown language": "unbekannte Sprache",
+			"unknown product": "unbekanntes Produkt",
+			"Devices": "Geräte",
+			"no configured devices": "keine eingerichteten Geräte",
+			"access failed": "Zugriff fehlgeschlagen",
+
+			"German": "Deutsch",
+			"English": "Englisch",
+			"French": "Französisch",
+			"Norwegian": "Norwegisch",
+			"Swedish": "Schwedisch",
+			"Italian": "Italienisch",
+			"Spanish": "Spanisch",
+
+			"WMS interface": "WMS-Schnittstelle",
+
+			"__actions__": "",
+			"Test access": "Zugriff prüfen",
+
+			"Decode element \"protocol\" of url": "Dekodierung des URL-Elements \"protocol\"",
+			"Decode": "dekodieren",
+			"String": "Zeichenkette",
+			"Element \"protocol\"": "Element \"protocol\"",
+			"Structure": "Aufbau",
+			"Command header": "Kommando-Startzeichen",
+			"Command counter": "Kommando-Zähler",
+			"Payload length": "Nutzdaten-Länge",
+			"Payload": "Nutzdaten",
+
+			"__end__": ""
+		}
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"translations": {
+		"de": {
+			"Warema WMS configurator": "Warema WMS Konfigurator",
+
+			"__properties__": "",
+			"Import category": "Kategorie zu Anlage von Instanzen",
+
+			"Devices": "Geräte",
+			"Room ID": "Raum-ID",
+			"Channel ID": "Kanal-ID",
+			"Product": "Produkt",
+
+			"__ends__": ""
+		}
+	}
+}

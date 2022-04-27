@@ -1,0 +1,31 @@
+{
+	"translations": {
+		"de": {
+			"Warema WebControl Device": "Warema WebControl Gerät",
+
+			"__properties__": "",
+			"Disable instance": "Instanz deaktivieren",
+
+			"Basic configuration (don't change)": "Basis-Konfiguration (nicht ändern)",
+
+			"Room ID": "Raum-ID",
+			"Channel ID": "Kanal-ID",
+			"Product": "Produkt",
+
+			"Update status interval": "Aktualisierungsintervall",
+			"Seconds": "Sekunden",
+
+			"__variables__": "",
+			"State": "Status",
+			"Position": "Position",
+			"Control": "Steuerung",
+			"Activity": "Aktivität",
+			"Last status update": "letze Aktualisierung",
+
+			"__actions__": "",
+			"Update status": "Status aktualisieren",
+
+			"__end__": ""
+		}
+	}
+}
