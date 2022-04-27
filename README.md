@@ -128,7 +128,7 @@ GUIDs
 
 - 1.2.1 @ 27.04.2022 17:10
   - Korrektur: self::$IS_DEACTIVATED wieder IS_INACTIVE
-  - interne Änderungen
+  - interne Änderungen (Translate überlagert, locale.json in mehㄦere translate.json gesplittet)
 
 - 1.2 @ 24.04.2022 15:34
   - Übersetzung vervollständigt
