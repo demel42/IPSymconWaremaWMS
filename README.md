@@ -126,6 +126,9 @@ GUIDs
 
 ## 7. Versions-Historie
 
+- 1.2.2 @ 29.04.2022 14:20
+  - Schreibfehler im Variableprofil 'WaremaWMS.State'
+
 - 1.2.1 @ 27.04.2022 17:10
   - Korrektur: self::$IS_DEACTIVATED wieder IS_INACTIVE
   - interne Änderungen (Translate überlagert, locale.json in mehㄦere translate.json gesplittet)

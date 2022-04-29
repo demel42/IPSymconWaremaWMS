@@ -3,6 +3,9 @@
 		"de": {
 			"Warema WebControl Device": "Warema WebControl Gerät",
 
+			"__function__": "CheckConfiguration",
+			"Spelling error in variableprofile 'WaremaWMS.State'": "Rechtschreibfehler im Variablenprofil 'WaremaWMS.State'",
+
 			"__properties__": "",
 			"Disable instance": "Instanz deaktivieren",
 

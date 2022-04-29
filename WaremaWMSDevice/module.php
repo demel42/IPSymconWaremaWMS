@@ -40,6 +40,29 @@ class WaremaWMSDevice extends IPSModule
         $this->ConnectParent('{6A9BBD57-8473-682D-4ABF-009AE8584B2B}');
     }
 
+    private function CheckModuleUpdate(array $oldInfo, array $newInfo)
+    {
+        $r = [];
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.2.2')) {
+            $r[] = $this->Translate('Spelling error in variableprofile \'WaremaWMS.State\'');
+        }
+
+        return $r;
+    }
+
+    private function CompleteModuleUpdate(array $oldInfo, array $newInfo)
+    {
+        if ($this->version2num($oldInfo) < $this->version2num('1.2.2')) {
+            if (IPS_VariableProfileExists('WaremaWMS.State')) {
+                IPS_DeleteVariableProfile('WaremaWMS.State');
+            }
+            $this->InstallVarProfiles(false);
+        }
+
+        return '';
+    }
+
     private function product2options($product)
     {
         $options = [

@@ -79,10 +79,10 @@ trait WaremaWMSLocalLib
 
         $associations = [
             ['Wert' => self::$STATE_OK, 'Name' => $this->Translate('Ok'), 'Farbe' => -1],
-            ['Wert' => self::$STATE_CHANNEL_UNREACHABLE, 'Name' => $this->Translate('No reaction'), 'Farbe' => -1],
+            ['Wert' => self::$STATE_CHANNEL_UNREACHABLE, 'Name' => $this->Translate('No response'), 'Farbe' => -1],
             ['Wert' => self::$STATE_GATEWAY_UNREACHABLE, 'Name' => $this->Translate('Gateway error'), 'Farbe' => -1],
             ['Wert' => self::$STATE_BLOCKED_WIND, 'Name' => $this->Translate('Wind alarm'), 'Farbe' => -1],
-            ['Wert' => self::$STATE_BLOCKED_RAIN, 'Name' => $this->Translate('Rain alarm '), 'Farbe' => -1],
+            ['Wert' => self::$STATE_BLOCKED_RAIN, 'Name' => $this->Translate('Rain alarm'), 'Farbe' => -1],
             ['Wert' => self::$STATE_ERROR, 'Name' => $this->Translate('Error'), 'Farbe' => -1],
         ];
         $this->CreateVarProfile('WaremaWMS.State', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
