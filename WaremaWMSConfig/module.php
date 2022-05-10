@@ -58,25 +58,6 @@ class WaremaWMSConfig extends IPSModule
         $this->SetStatus(IS_ACTIVE);
     }
 
-    private function SetLocation()
-    {
-        $catID = $this->ReadPropertyInteger('ImportCategoryID');
-        $tree_position = [];
-        if ($catID >= 10000 && IPS_ObjectExists($catID)) {
-            $tree_position[] = IPS_GetName($catID);
-            $parID = IPS_GetObject($catID)['ParentID'];
-            while ($parID > 0) {
-                if ($parID > 0) {
-                    $tree_position[] = IPS_GetName($parID);
-                }
-                $parID = IPS_GetObject($parID)['ParentID'];
-            }
-            $tree_position = array_reverse($tree_position);
-        }
-        $this->SendDebug(__FUNCTION__, 'tree_position=' . print_r($tree_position, true), 0);
-        return $tree_position;
-    }
-
     private function getConfiguratorValues()
     {
         $config_list = [];
@@ -87,6 +68,8 @@ class WaremaWMSConfig extends IPSModule
         }
 
         $this->SetStatus(IS_ACTIVE);
+
+        $catID = $this->ReadPropertyInteger('ImportCategoryID');
 
         $data = [
             'DataID'   => '{A8C43E67-9C5C-8A22-1F46-69EC56138C81}',
@@ -130,7 +113,7 @@ class WaremaWMSConfig extends IPSModule
                     'create'       => [
                         [
                             'moduleID'      => $guid,
-                            'location'      => $this->SetLocation(),
+                            'location'      => $this->GetConfiguratorLocation($catID),
                             'info'          => 'Warema WMS ' . $product,
                             'configuration' => [
                                 'room_id'    => $room_id,

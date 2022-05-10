@@ -126,6 +126,11 @@ GUIDs
 
 ## 7. Versions-Historie
 
+- 1.2.3 @ 10.05.2022 15:06
+  - update submodule CommonStubs
+  - SetLocation() -> GetConfiguratorLocation()
+  - weitere Absicherung ungültiger ID's
+
 - 1.2.2 @ 29.04.2022 14:20
   - Schreibfehler im Variableprofil 'WaremaWMS.State'
 
