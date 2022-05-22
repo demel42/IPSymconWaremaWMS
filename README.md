@@ -126,6 +126,9 @@ GUIDs
 
 ## 7. Versions-Historie
 
+- 1.2.5 @ 22.05.2022 15:48
+  - Fix: Schreibfehler bei Konstanten (WIND_ALARM, RAIN_ALARM)
+
 - 1.2.4 @ 17.05.2022 15:38
   - update submodule CommonStubs
     Fix: Absicherung gegen fehlende Objekte
