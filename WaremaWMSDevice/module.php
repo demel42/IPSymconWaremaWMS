@@ -35,7 +35,7 @@ class WaremaWMSDevice extends IPSModule
 
         $this->InstallVarProfiles(false);
 
-        $this->RegisterTimer('UpdateStatus', 0, $this->GetModulePrefix() . '_UpdateStatus(' . $this->InstanceID . ');');
+        $this->RegisterTimer('UpdateStatus', 0, 'IPS_RequestAction(' . $this->InstanceID . ', "UpdateStatus", "");');
 
         $this->ConnectParent('{6A9BBD57-8473-682D-4ABF-009AE8584B2B}');
     }
@@ -144,11 +144,12 @@ class WaremaWMSDevice extends IPSModule
             return;
         }
 
-        $this->SetUpdateInterval();
         $this->SetStatus(IS_ACTIVE);
+
+        $this->SetUpdateInterval();
     }
 
-    protected function GetFormElements()
+    private function GetFormElements()
     {
         $formElements = $this->GetCommonFormElements('Warema WMS Device');
 
@@ -196,7 +197,7 @@ class WaremaWMSDevice extends IPSModule
         return $formElements;
     }
 
-    protected function GetFormActions()
+    private function GetFormActions()
     {
         $formActions = [];
 
@@ -212,7 +213,7 @@ class WaremaWMSDevice extends IPSModule
         $formActions[] = [
             'type'    => 'Button',
             'caption' => 'Update status',
-            'onClick' => $this->GetModulePrefix() . '_UpdateStatus($id);'
+            'onClick' => 'IPS_RequestAction(' . $this->InstanceID . ', "UpdateStatus", "");',
         ];
 
         $formActions[] = [
@@ -220,11 +221,7 @@ class WaremaWMSDevice extends IPSModule
             'caption'   => 'Expert area',
             'expanded ' => false,
             'items'     => [
-                [
-                    'type'    => 'Button',
-                    'caption' => 'Re-install variable-profiles',
-                    'onClick' => $this->GetModulePrefix() . '_InstallVarProfiles($id, true);'
-                ],
+                $this->GetInstallVarProfilesFormItem(),
             ],
         ];
         $formActions[] = [
@@ -278,6 +275,9 @@ class WaremaWMSDevice extends IPSModule
             case 'Position':
                 $r = $this->SendPosition($value);
                 break;
+            case 'UpdateStatus':
+                $this->UpdateStatus();
+                break;
             default:
                 $this->SendDebug(__FUNCTION__, 'invalid ident ' . $ident, 0);
                 break;
@@ -288,7 +288,7 @@ class WaremaWMSDevice extends IPSModule
         }
     }
 
-    protected function SetUpdateInterval($sec = null)
+    private function SetUpdateInterval($sec = null)
     {
         if ($sec == null) {
             $sec = $this->ReadPropertyInteger('update_interval');
@@ -297,7 +297,7 @@ class WaremaWMSDevice extends IPSModule
         $this->MaintainTimer('UpdateStatus', (int) $msec);
     }
 
-    public function UpdateStatus()
+    private function UpdateStatus()
     {
         if ($this->GetStatus() == IS_INACTIVE) {
             $this->SendDebug(__FUNCTION__, 'instance is inactive, skip', 0);

@@ -237,7 +237,7 @@ class WaremaWMSIO extends IPSModule
         $this->SetStatus(IS_ACTIVE);
     }
 
-    protected function GetFormElements()
+    private function GetFormElements()
     {
         $formElements = $this->GetCommonFormElements('Warema WMS I/O');
 
@@ -270,7 +270,7 @@ class WaremaWMSIO extends IPSModule
         return $formElements;
     }
 
-    protected function GetFormActions()
+    private function GetFormActions()
     {
         $formActions = [];
 
@@ -286,7 +286,7 @@ class WaremaWMSIO extends IPSModule
         $formActions[] = [
             'type'    => 'Button',
             'caption' => 'Test access',
-            'onClick' => $this->GetModulePrefix() . '_TestAccess($id);'
+            'onClick' => 'IPS_RequestAction(' . $this->InstanceID . ', "TestAccess", "");',
         ];
 
         $items = [];
@@ -308,7 +308,7 @@ class WaremaWMSIO extends IPSModule
                     [
                         'type'    => 'Button',
                         'caption' => 'Decode',
-                        'onClick' => $this->GetModulePrefix() . '_DecodeProtocol($id, $protocol);'
+                        'onClick' => 'IPS_RequestAction(' . $this->InstanceID . ', "DecodeProtocol", json_encode(["protocol" => $protocol]));',
                     ],
                     [
                         'type'    => 'Label',
@@ -316,11 +316,7 @@ class WaremaWMSIO extends IPSModule
                 ],
             ];
         }
-        $items[] = [
-            'type'    => 'Button',
-            'caption' => 'Re-install variable-profiles',
-            'onClick' => $this->GetModulePrefix() . '_InstallVarProfiles($id, true);'
-        ];
+        $items[] = $this->GetInstallVarProfilesFormItem();
 
         $formActions[] = [
             'type'      => 'ExpansionPanel',
@@ -352,20 +348,24 @@ class WaremaWMSIO extends IPSModule
             return;
         }
 
-        if ($this->GetStatus() == IS_INACTIVE) {
-            $this->SendDebug(__FUNCTION__, 'instance is inactive, skip', 0);
-            return;
-        }
-
         switch ($ident) {
+            case 'TestAccess':
+                $this->TestAccess();
+                break;
+            case 'DecodeProtocol':
+                $this->DecodeProtocol($value);
+                break;
             default:
                 $this->SendDebug(__FUNCTION__, 'invalid ident ' . $ident, 0);
                 break;
         }
     }
 
-    public function DecodeProtocol(string $protocol)
+    private function DecodeProtocol($params)
     {
+        $jparams = json_decode($params, true);
+        $protocol = isset($jparams['protocol']) ? $jparams['protocol'] : '';
+
         $msg = $this->Translate('Element "protocol"') . ' "' . $protocol . '"' . PHP_EOL;
         $msg .= PHP_EOL;
 
@@ -392,7 +392,7 @@ class WaremaWMSIO extends IPSModule
             $msg .= PHP_EOL;
         }
 
-        echo $msg;
+        $this->PopupMessage($msg);
     }
 
     private function buildCommand($payload)
@@ -529,7 +529,7 @@ class WaremaWMSIO extends IPSModule
         return $jdata;
     }
 
-    public function TestAccess()
+    private function TestAccess()
     {
         $s = '- ' . $this->Translate('Warema WMS WebControl configuration') . ' -' . PHP_EOL;
         $s .= PHP_EOL;
@@ -554,7 +554,7 @@ class WaremaWMSIO extends IPSModule
         } else {
             $s .= $this->Translate('access failed') . PHP_EOL;
         }
-        echo $s;
+        $this->PopupMessage($s);
     }
 
     private function WebControl_GetLanguage()
