@@ -35,9 +35,20 @@ class WaremaWMSDevice extends IPSModule
 
         $this->InstallVarProfiles(false);
 
+        $this->ConnectParent('{6A9BBD57-8473-682D-4ABF-009AE8584B2B}');
+
         $this->RegisterTimer('UpdateStatus', 0, 'IPS_RequestAction(' . $this->InstanceID . ', "UpdateStatus", "");');
 
-        $this->ConnectParent('{6A9BBD57-8473-682D-4ABF-009AE8584B2B}');
+        $this->RegisterMessage(0, IPS_KERNELMESSAGE);
+    }
+
+    public function MessageSink($tstamp, $senderID, $message, $data)
+    {
+        parent::MessageSink($tstamp, $senderID, $message, $data);
+
+        if ($message == IPS_KERNELMESSAGE && $data[0] == KR_READY) {
+            $this->SetUpdateInterval();
+        }
     }
 
     private function CheckModuleUpdate(array $oldInfo, array $newInfo)
