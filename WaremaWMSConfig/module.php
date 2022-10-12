@@ -99,6 +99,10 @@ class WaremaWMSConfig extends IPSModule
                     }
                 }
 
+                if ($instanceID && IPS_GetInstance($instanceID)['ConnectionID'] != IPS_GetInstance($this->InstanceID)['ConnectionID']) {
+                    continue;
+                }
+
                 $entry = [
                     'instanceID'   => $instanceID,
                     'name'         => $room_name . '.' . $channel_name,
@@ -134,6 +138,10 @@ class WaremaWMSConfig extends IPSModule
                 }
             }
             if ($fnd) {
+                continue;
+            }
+
+            if (IPS_GetInstance($instID)['ConnectionID'] != IPS_GetInstance($this->InstanceID)['ConnectionID']) {
                 continue;
             }
 
