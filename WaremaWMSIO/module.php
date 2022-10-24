@@ -321,14 +321,14 @@ class WaremaWMSIO extends IPSModule
         $formActions[] = [
             'type'      => 'ExpansionPanel',
             'caption'   => 'Expert area',
-            'expanded ' => false,
+            'expanded'  => false,
             'items'     => $items,
         ];
 
         $formActions[] = [
             'type'      => 'ExpansionPanel',
             'caption'   => 'Test area',
-            'expanded ' => false,
+            'expanded'  => false,
             'items'     => [
                 [
                     'type'    => 'TestCenter',
