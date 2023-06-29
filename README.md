@@ -126,6 +126,12 @@ GUIDs
 
 ## 7. Versions-Historie
 
+- 1.6 @ 29.06.2023 10:42
+  - Trennung von Soll- und zurück gemeldeter Position
+  - update submodule CommonStubs
+    - Absicherung bei Zugriff auf Objekte und Inhalte
+    - Vorbereitung auf IPS 7 / PHP 8.2
+
 - 1.5.4 @ 12.10.2022 14:44
   - Konfigurator betrachtet nun nur noch Geräte, die entweder noch nicht angelegt wurden oder mit dem gleichen I/O verbunden sind
   - update submodule CommonStubs

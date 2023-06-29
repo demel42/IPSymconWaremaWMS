@@ -3,8 +3,10 @@
 		"de": {
 			"Warema WebControl Device": "Warema WebControl Gerät",
 
-			"__function__": "CheckConfiguration",
+			"__function__": "CheckUpdate",
 			"Spelling error in variableprofile 'WaremaWMS.State'": "Rechtschreibfehler im Variablenprofil 'WaremaWMS.State'",
+			"Variable 'Position' is no longer an action and is replaced by 'TargetPosition' in this respect":
+				"Die Variable 'Position' ist nicht länger eine Aktion und wird diesbezüglich durch 'TargetPosition' ersetzt",
 
 			"__properties__": "",
 			"Disable instance": "Instanz deaktivieren",
@@ -21,6 +23,7 @@
 			"__variables__": "",
 			"State": "Status",
 			"Position": "Position",
+			"Target position": "Soll-Position",
 			"Control": "Steuerung",
 			"Activity": "Aktivität",
 			"Last status update": "letze Aktualisierung",

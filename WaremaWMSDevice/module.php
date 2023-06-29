@@ -59,6 +59,10 @@ class WaremaWMSDevice extends IPSModule
             $r[] = $this->Translate('Spelling error in variableprofile \'WaremaWMS.State\'');
         }
 
+        if ($this->version2num($oldInfo) < $this->version2num('1.6')) {
+            $r[] = $this->Translate('Variable \'Position\' is no longer an action and is replaced by \'TargetPosition\' in this respect');
+        }
+
         return $r;
     }
 
@@ -69,6 +73,13 @@ class WaremaWMSDevice extends IPSModule
                 IPS_DeleteVariableProfile('WaremaWMS.State');
             }
             $this->InstallVarProfiles(false);
+        }
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.6')) {
+            @$varID = $this->GetIDForIdent('Position');
+            if (@$varID != false) {
+                $this->MaintainAction('Position', false);
+            }
         }
 
         return '';
@@ -130,8 +141,9 @@ class WaremaWMSDevice extends IPSModule
 
         $vpos = 10;
         $this->MaintainVariable('Position', $this->Translate('Position'), VARIABLETYPE_INTEGER, 'WaremaWMS.Position', $vpos++, $options['position_slider']);
+        $this->MaintainVariable('TargetPosition', $this->Translate('Target position'), VARIABLETYPE_INTEGER, 'WaremaWMS.Position', $vpos++, $options['position_slider']);
         if ($options['position_slider']) {
-            $this->MaintainAction('Position', true);
+            $this->MaintainAction('TargetPosition', true);
         }
 
         if ($options['control_awning']) {
@@ -283,7 +295,7 @@ class WaremaWMSDevice extends IPSModule
                         break;
                 }
                 break;
-            case 'Position':
+            case 'TargetPosition':
                 $r = $this->SendPosition($value);
                 break;
             case 'UpdateStatus':
@@ -340,6 +352,9 @@ class WaremaWMSDevice extends IPSModule
                 }
                 $this->SetValue('Activity', $activity);
             }
+            if ($this->GetValue('Activity') == self::$ACTIVITY_STAND) {
+                $this->SetValue('TargetPosition', $this->GetValue('TargetPosition'));
+            }
         }
         $this->SetValue('LastStatus', time());
 
@@ -359,6 +374,8 @@ class WaremaWMSDevice extends IPSModule
 
     public function SendStop()
     {
+        $this->SendDebug(__FUNCTION__, '', 0);
+
         $room_id = $this->ReadPropertyInteger('room_id');
         $channel_id = $this->ReadPropertyInteger('channel_id');
 
@@ -380,6 +397,8 @@ class WaremaWMSDevice extends IPSModule
 
     public function SendUp()
     {
+        $this->SendDebug(__FUNCTION__, '', 0);
+
         $room_id = $this->ReadPropertyInteger('room_id');
         $channel_id = $this->ReadPropertyInteger('channel_id');
 
@@ -401,6 +420,8 @@ class WaremaWMSDevice extends IPSModule
 
     public function SendDown()
     {
+        $this->SendDebug(__FUNCTION__, '', 0);
+
         $room_id = $this->ReadPropertyInteger('room_id');
         $channel_id = $this->ReadPropertyInteger('channel_id');
 
@@ -422,6 +443,8 @@ class WaremaWMSDevice extends IPSModule
 
     public function SendPosition(int $position)
     {
+        $this->SendDebug(__FUNCTION__, 'position=' . $position, 0);
+
         $room_id = $this->ReadPropertyInteger('room_id');
         $channel_id = $this->ReadPropertyInteger('channel_id');
 
