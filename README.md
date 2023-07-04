@@ -126,8 +126,9 @@ GUIDs
 
 ## 7. Versions-Historie
 
-- 1.6 @ 29.06.2023 10:42
+- 1.6 @ 04.07.2023 14:44
   - Trennung von Soll- und zurück gemeldeter Position
+  - Vorbereitung auf IPS 7 / PHP 8.2
   - update submodule CommonStubs
     - Absicherung bei Zugriff auf Objekte und Inhalte
     - Vorbereitung auf IPS 7 / PHP 8.2
