@@ -11,6 +11,8 @@
 			"__properties__": "",
 			"Disable instance": "Instanz deaktivieren",
 
+			"Generate message when the gateway is inactive": "Meldung erzeugen wenn der Gateway inaktiv ist",
+
 			"Basic configuration (don't change)": "Basis-Konfiguration (nicht ändern)",
 
 			"Room ID": "Raum-ID",
@@ -19,6 +21,9 @@
 
 			"Update status interval": "Aktualisierungsintervall",
 			"Seconds": "Sekunden",
+
+			"__messages__": "",
+			"Instance has no active gateway": "Instanz hat keinen aktiven Gateway",
 
 			"__variables__": "",
 			"State": "Status",

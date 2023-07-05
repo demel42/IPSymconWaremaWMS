@@ -126,8 +126,9 @@ GUIDs
 
 ## 7. Versions-Historie
 
-- 1.6 @ 04.07.2023 14:44
-  - Trennung von Soll- und zurück gemeldeter Position
+- 1.6 @ 05.07.2023 11:56
+  - Neu: Trennung von Soll- und zurück gemeldeter Position
+  - Neu: Schalter, um die Meldung eines inaktiven Gateway zu steuern
   - Vorbereitung auf IPS 7 / PHP 8.2
   - update submodule CommonStubs
     - Absicherung bei Zugriff auf Objekte und Inhalte
