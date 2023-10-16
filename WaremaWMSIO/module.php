@@ -168,13 +168,16 @@ class WaremaWMSIO extends IPSModule
     private static $DEF_MAXRAUM = 20;
     private static $DEF_MAXKANAL = 10;
 
-    private $ModuleDir;
-
     public function __construct(string $InstanceID)
     {
         parent::__construct($InstanceID);
 
-        $this->ModuleDir = __DIR__;
+        $this->CommonContruct(__DIR__);
+    }
+
+    public function __destruct()
+    {
+        $this->CommonDestruct();
     }
 
     public function Create()
@@ -188,7 +191,8 @@ class WaremaWMSIO extends IPSModule
 
         $this->RegisterAttributeInteger('command_counter', 1);
 
-        $this->RegisterAttributeString('UpdateInfo', '');
+        $this->RegisterAttributeString('UpdateInfo', json_encode([]));
+        $this->RegisterAttributeString('ModuleStats', json_encode([]));
 
         $this->InstallVarProfiles(false);
     }
@@ -674,7 +678,7 @@ class WaremaWMSIO extends IPSModule
             $poll_cmd,
         ];
         for ($i = 0; $i < $max_rep; $i++) {
-            IPS_Sleep(250);
+            IPS_Sleep(500);
             $response = $this->do_HttpRequest($payload);
             $this->SendDebug(__FUNCTION__, 'repeat ' . $i . ', response=' . print_r($response, true), 0);
             if ($response == false) {
@@ -726,7 +730,7 @@ class WaremaWMSIO extends IPSModule
 
         $responseID = $this->GetArrayElem($response, 'responseID', 0);
         $this->SendDebug(__FUNCTION__, 'responseID=' . $responseID . '(' . $this->decode_code($responseID) . ')', 0);
-        $response = $this->WebControl_DoPolling($room_id, $channel_id, self::$POLL_POSITION, 10);
+        $response = $this->WebControl_DoPolling($room_id, $channel_id, self::$POLL_POSITION, 20);
         if ($response == false) {
             $ret = [
                 'State'  => self::$STATE_ERROR,
@@ -750,6 +754,8 @@ class WaremaWMSIO extends IPSModule
                             $i++;
                         }
                         $r['position'] = (int) ($i / 2);
+                    } else {
+                        $r['position'] = 0;
                     }
                 }
                 if (isset($response['winkel'])) {
