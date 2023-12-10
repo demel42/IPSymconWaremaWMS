@@ -78,23 +78,25 @@ alle Funktionen sind über _RequestAction_ der jew. Variablen ansteuerbar
 
 #### Properties
 
-| Eigenschaft               | Typ      | Standardwert | Beschreibung |
-| :------------------------ | :------  | :----------- | :----------- |
-| Kategorie                 | integer  | 0            | Kategorie zu Anlage von Instanzen |
+| Eigenschaft               | Typ     | Standardwert | Beschreibung |
+| :------------------------ | :------ | :----------- | :----------- |
+| Kategorie                 | integer | 0            | Kategorie zu Anlage von Instanzen _[1]_ |
+
+_[1]_: nur bis IPS-Version 7 vorhanden, danach ist eine Einstellmöglichkeit Bestandteil des Standard-Konfigurators
 
 ### WaremaWMSDevice
 
 #### Properties
 
-| Eigenschaft               | Typ      | Standardwert | Beschreibung |
-| :------------------------ | :------  | :----------- | :----------- |
-| Instanz deaktivieren      | boolean  | false        | Instanz temporär deaktivieren |
-|                           |          |              | |
-| Raum-ID                   | integer  |              | Raum-Index |
-| Kanal-ID                  | integer  |              | Kanal-Index |
-| Produkt                   | integer  |              | Produkt-Typ |
-|                           |          |              | |
-| Aktualisierungsintervall  | integer  | 15           | Intervall in Sekunden |
+| Eigenschaft               | Typ     | Standardwert | Beschreibung |
+| :------------------------ | :------ | :----------- | :----------- |
+| Instanz deaktivieren      | boolean | false        | Instanz temporär deaktivieren |
+|                           |         |              | |
+| Raum-ID                   | integer |              | Raum-Index |
+| Kanal-ID                  | integer |              | Kanal-Index |
+| Produkt                   | integer |              | Produkt-Typ |
+|                           |         |              | |
+| Aktualisierungsintervall  | integer | 15           | Intervall in Sekunden |
 
 #### Aktionen
 
@@ -125,6 +127,9 @@ GUIDs
   - `{B78E405B-23E3-10A5-4B26-F24277883F96}`: an WaremaWMSConfig, WaremaWMSDevice
 
 ## 7. Versions-Historie
+
+- 1.8 @ 10.12.2023 15:20
+  - Neu: ab IPS-Version 7 ist im Konfigurator die Angabe einer Import-Kategorie integriert, daher entfällt die bisher vorhandene separate Einstellmöglichkeit
 
 - 1.7 @ 03.11.2023 11:06
   - Neu: Ermittlung von Speicherbedarf und Laufzeit (aktuell und für 31 Tage) und Anzeige im Panel "Information"

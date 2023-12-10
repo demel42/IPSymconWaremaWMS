@@ -26,7 +26,9 @@ class WaremaWMSConfig extends IPSModule
     {
         parent::Create();
 
-        $this->RegisterPropertyInteger('ImportCategoryID', 0);
+        if (IPS_GetKernelVersion() < 7.0) {
+            $this->RegisterPropertyInteger('ImportCategoryID', 0);
+        }
 
         $this->RegisterAttributeString('UpdateInfo', json_encode([]));
         $this->RegisterAttributeString('ModuleStats', json_encode([]));
@@ -38,7 +40,10 @@ class WaremaWMSConfig extends IPSModule
     {
         parent::ApplyChanges();
 
-        $propertyNames = ['ImportCategoryID'];
+        $propertyNames = [];
+        if (IPS_GetKernelVersion() < 7.0) {
+            $propertyNames[] = 'ImportCategoryID';
+        }
         $this->MaintainReferences($propertyNames);
 
         if ($this->CheckPrerequisites() != false) {
@@ -70,7 +75,12 @@ class WaremaWMSConfig extends IPSModule
 
         $this->MaintainStatus(IS_ACTIVE);
 
-        $catID = $this->ReadPropertyInteger('ImportCategoryID');
+        if (IPS_GetKernelVersion() < 7.0) {
+            $catID = $this->ReadPropertyInteger('ImportCategoryID');
+            $location = $this->GetConfiguratorLocation($catID);
+        } else {
+            $location = '';
+        }
 
         $data = [
             'DataID'   => '{A8C43E67-9C5C-8A22-1F46-69EC56138C81}',
@@ -118,7 +128,7 @@ class WaremaWMSConfig extends IPSModule
                     'create'       => [
                         [
                             'moduleID'      => $guid,
-                            'location'      => $this->GetConfiguratorLocation($catID),
+                            'location'      => $location,
                             'info'          => 'Warema WMS ' . $product,
                             'configuration' => [
                                 'room_id'    => $room_id,
@@ -181,11 +191,13 @@ class WaremaWMSConfig extends IPSModule
             return $formElements;
         }
 
-        $formElements[] = [
-            'name'    => 'ImportCategoryID',
-            'type'    => 'SelectCategory',
-            'caption' => 'Import category'
-        ];
+        if (IPS_GetKernelVersion() < 7.0) {
+            $formElements[] = [
+                'name'    => 'ImportCategoryID',
+                'type'    => 'SelectCategory',
+                'caption' => 'Import category'
+            ];
+        }
 
         $entries = $this->getConfiguratorValues();
         $formElements[] = [
