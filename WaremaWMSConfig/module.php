@@ -66,11 +66,11 @@ class WaremaWMSConfig extends IPSModule
 
     private function getConfiguratorValues()
     {
-        $config_list = [];
+        $entries = [];
 
         if ($this->CheckStatus() == self::$STATUS_INVALID) {
             $this->SendDebug(__FUNCTION__, $this->GetStatusText() . ' => skip', 0);
-            return $config_list;
+            return $entries;
         }
 
         $this->MaintainStatus(IS_ACTIVE);
@@ -97,6 +97,7 @@ class WaremaWMSConfig extends IPSModule
         if (is_array($devices) && count($devices)) {
             foreach ($devices as $device) {
                 $this->SendDebug(__FUNCTION__, 'device=' . print_r($device, true), 0);
+
                 $room_id = $device['room_id'];
                 $channel_id = $device['channel_id'];
                 $room_name = $device['room_name'];
@@ -106,8 +107,8 @@ class WaremaWMSConfig extends IPSModule
 
                 $instanceID = 0;
                 foreach ($instIDs as $instID) {
-                    if (IPS_GetProperty($instID, 'room_id') == $room_id && IPS_GetProperty($instID, 'channel_id') == $channel_id) {
-                        $this->SendDebug(__FUNCTION__, 'device found: ' . IPS_GetName($instID) . ' (' . $instID . ')', 0);
+                    if (@IPS_GetProperty($instID, 'room_id') == $room_id && @IPS_GetProperty($instID, 'channel_id') == $channel_id) {
+                        $this->SendDebug(__FUNCTION__, 'instance found: ' . IPS_GetName($instID) . ' (' . $instID . ')', 0);
                         $instanceID = $instID;
                         break;
                     }
@@ -138,14 +139,13 @@ class WaremaWMSConfig extends IPSModule
                         ],
                     ],
                 ];
-
-                $config_list[] = $entry;
-                $this->SendDebug(__FUNCTION__, 'entry=' . print_r($entry, true), 0);
+                $entries[] = $entry;
+                $this->SendDebug(__FUNCTION__, 'instanceID=' . $instanceID . ', entry=' . print_r($entry, true), 0);
             }
         }
         foreach ($instIDs as $instID) {
             $fnd = false;
-            foreach ($config_list as $entry) {
+            foreach ($entries as $entry) {
                 if ($entry['instanceID'] == $instID) {
                     $fnd = true;
                     break;
@@ -176,11 +176,10 @@ class WaremaWMSConfig extends IPSModule
                 'channel_name' => $channel_name,
                 'product_name' => $product_name,
             ];
-
-            $config_list[] = $entry;
-            $this->SendDebug(__FUNCTION__, 'missing entry=' . print_r($entry, true), 0);
+            $entries[] = $entry;
+            $this->SendDebug(__FUNCTION__, 'lost: instanceID=' . $instID . ', entry=' . print_r($entry, true), 0);
         }
-        return $config_list;
+        return $entries;
     }
 
     private function GetFormElements()

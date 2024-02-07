@@ -128,7 +128,8 @@ GUIDs
 
 ## 7. Versions-Historie
 
-- 1.9 @ 06.02.2024 09:46
+- 1.9 @ 07.02.2024 17:43
+  - Fix: Absicherung von Zugriffen auf andere Instanzen in Konfiguratoren
   - Verbesserung: Angleichung interner Bibliotheken anlässlich IPS 7
   - update submodule CommonStubs
 
