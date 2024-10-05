@@ -24,10 +24,8 @@ Weitere WMS-Komponenten sind grundsätzlich auch ansteuerbar, mangels Verfügbar
 ## 2. Voraussetzungen
 
 - IP-Symcon ab Version 6.0
-- Warema WebControl (nicht Warema WebControl Pro via Warema Cloud)
+- Warema WebControl oder Warema WebControl Pro 
 eingelernt im WMS
-
-Es ist möglich, das eine WebControl Pro im Hausnetz genauso wie ein WebControl funktioniert, würde ich aber nicht vonb ausgehen.
 
 ## 3. Installation
 
@@ -64,7 +62,7 @@ alle Funktionen sind über _RequestAction_ der jew. Variablen ansteuerbar
 | :------------------------ | :------  | :----------- | :----------- |
 | Instanz deaktivieren      | boolean  | false        | Instanz temporär deaktivieren |
 |                           |          |              | |
-| WMS-Schnittstelle         | integer  | 0            | 0=WebControl |
+| WMS-Schnittstelle         | integer  | 0            | 0=WebControl, 1=WebControl Pro |
 | Hostname of WebControl    | string   |              | Hostname / ƢP-Adresse des WebControl |
 
 
@@ -107,11 +105,18 @@ _[1]_: nur bis IPS-Version 7 vorhanden, danach ist eine Einstellmöglichkeit Bes
 ### Variablenprofile
 
 Es werden folgende Variablenprofile angelegt:
+* Boolean<br>
+WaremaWMS.Switch
+
 * Integer<br>
 WaremaWMS.Activity,
-WaremaWMS.ControlAwning,
-WaremaWMS.ControlBlind,
+WaremaWMS.Brightness,
+WaremaWMS.ControlExtendRetract,
+WaremaWMS.ControlOpenClose,
+WaremaWMS.ControlUpDown,
 WaremaWMS.Position,
+WaremaWMS.Power,
+WaremaWMS.Rotation,
 WaremaWMS.State
 
 ## 6. Anhang
@@ -127,6 +132,10 @@ GUIDs
   - `{B78E405B-23E3-10A5-4B26-F24277883F96}`: an WaremaWMSConfig, WaremaWMSDevice
 
 ## 7. Versions-Historie
+
+- 2.0 @ 05.10.2024 14:21
+  - Verbesserung: Integration des WebControl Pro
+  - update submodule CommonStubs
 
 - 1.9 @ 07.02.2024 17:43
   - Fix: Absicherung von Zugriffen auf andere Instanzen in Konfiguratoren

@@ -14,7 +14,7 @@ class WaremaWMSDevice extends IPSModule
     {
         parent::__construct($InstanceID);
 
-        $this->CommonContruct(__DIR__);
+        $this->CommonConstruct(__DIR__);
     }
 
     public function __destruct()
@@ -32,7 +32,9 @@ class WaremaWMSDevice extends IPSModule
 
         $this->RegisterPropertyInteger('room_id', 0);
         $this->RegisterPropertyInteger('channel_id', 0);
+        $this->RegisterPropertyInteger('interface', 0);
         $this->RegisterPropertyInteger('product', 0);
+        $this->RegisterPropertyString('actions', 0);
 
         $this->RegisterPropertyInteger('update_interval', 15);
 
@@ -69,6 +71,10 @@ class WaremaWMSDevice extends IPSModule
             $r[] = $this->Translate('Variable \'Position\' is no longer an action and is replaced by \'TargetPosition\' in this respect');
         }
 
+        if ($this->version2num($oldInfo) < $this->version2num('2.0')) {
+            $r[] = $this->Translate('Rename of variableprofile \'WaremaWMS.ControlAwning\'');
+        }
+
         return $r;
     }
 
@@ -88,28 +94,119 @@ class WaremaWMSDevice extends IPSModule
             }
         }
 
+        if ($this->version2num($oldInfo) < $this->version2num('2.0')) {
+            if (IPS_VariableProfileExists('WaremaWMS.ControlAwning')) {
+                IPS_DeleteVariableProfile('WaremaWMS.ControlAwning');
+            }
+            if (IPS_VariableProfileExists('WaremaWMS.ControlBlind')) {
+                IPS_DeleteVariableProfile('WaremaWMS.ControlBlind');
+            }
+            $this->InstallVarProfiles(false);
+        }
+
         return '';
+    }
+
+    private function actionType2action($actionType)
+    {
+        $actions = @json_decode((string) $this->ReadPropertyString('actions'), true);
+        foreach ($actions as $action) {
+            if ($action['actionType'] == $actionType) {
+                return $action;
+            }
+        }
+        return false;
     }
 
     private function product2options($product)
     {
         $options = [
-            'position_slider' => false,
-            'control_awning'  => false, // Retract, Stop, Extend
-            'control_blind'   => false, // Up, Stop, Down
-            'activity'        => false,
+            'position_slider'         => false,
+            'rotation_slider'         => false,
+            'brightness_slider'       => false,
+            'power_slider'            => false,
+            'control_extend_retract'  => false, // Retract, Stop, Extend (int)
+            'control_up_down'         => false, // Up, Stop, Down (int)
+            'control_open_close'      => false, // Open, Stop, Close (int)
+            'control_switch'          => false, // On, Off (bool)
+            'activity'                => false,
         ];
 
-        switch ($product) {
-            case self::$PRODUCT_MARKISE:
-            case self::$PRODUCT_MARKISE_INT_WIND:
-                $options['position_slider'] = true;
-                $options['control_awning'] = true;
-                $options['activity'] = true;
-                break;
-            default:
-                $this->SendDebug(__FUNCTION__, 'unknown product ' . $product, 0);
-                break;
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            switch ($product) {
+                case self::$PRODUCT_AWNING:
+                    $options['position_slider'] = true;
+                    $options['control_extend_retract'] = true;
+                    $options['activity'] = true;
+                    break;
+                default:
+                    $this->SendDebug(__FUNCTION__, 'Unknown product ' . $product, 0);
+                    break;
+            }
+        }
+        if ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            switch ($product) {
+                case self::$PRODUCT_AWNING:
+                    $options['control_extend_retract'] = true;
+                    $action_position = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
+                    if ($action_position !== false) {
+                        $options['position_slider'] = true;
+                    }
+                    $options['activity'] = true;
+                    break;
+                case self::$PRODUCT_VENETIAN_BLIND:
+                case self::$PRODUCT_SHUTTER_BLIND:
+                    $options['control_up_down'] = true;
+                    $action_position = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
+                    if ($action_position !== false) {
+                        $options['position_slider'] = true;
+                    }
+                    $action_rotation = $this->actionType2action(self::$ACTION_TYPE_ROTATION);
+                    if ($action_rotation !== false) {
+                        $options['rotation_slider'] = true;
+                    }
+                    $options['activity'] = true;
+                    break;
+                case self::$PRODUCT_SLAT_ROOF:
+                    $options['control_open_close'] = true;
+                    $action_position = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
+                    if ($action_position !== false) {
+                        $options['position_slider'] = true;
+                    }
+                    $action_rotation = $this->actionType2action(self::$ACTION_TYPE_ROTATION);
+                    if ($action_rotation !== false) {
+                        $options['rotation_slider'] = true;
+                    }
+                    $options['activity'] = true;
+                    break;
+                case self::$PRODUCT_WINDOW:
+                    $options['control_open_close'] = true;
+                    $action_position = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
+                    if ($action_position !== false) {
+                        $options['position_slider'] = true;
+                    }
+                    $options['activity'] = true;
+                    break;
+                case self::$PRODUCT_SWITCH:
+                    $options['control_switch'] = true;
+                    break;
+                case self::$PRODUCT_DIMMER:
+                    $options['control_switch'] = true;
+                    $action_percentage = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
+                    if ($action_percentage !== false) {
+                        if ($action_percentage['actionDescription'] == $ACTION_DESC_LIGHT_DIMMING) {
+                            $options['brightness_slider'] = true;
+                        }
+                        if ($action_percentage['actionDescription'] == $ACTION_DESC_LOAD_DIMMING) {
+                            $options['power_slider'] = true;
+                        }
+                    }
+                    break;
+                default:
+                    $this->SendDebug(__FUNCTION__, 'Unknown product ' . $product, 0);
+                    break;
+            }
         }
         return $options;
     }
@@ -152,11 +249,44 @@ class WaremaWMSDevice extends IPSModule
             $this->MaintainAction('TargetPosition', true);
         }
 
-        if ($options['control_awning']) {
-            $this->MaintainVariable('Control', $this->Translate('Control'), VARIABLETYPE_INTEGER, 'WaremaWMS.ControlAwning', $vpos++, true);
+        $this->MaintainVariable('Rotation', $this->Translate('Rotation'), VARIABLETYPE_INTEGER, 'WaremaWMS.Rotation', $vpos++, $options['rotation_slider']);
+        $this->MaintainVariable('TargetRotation', $this->Translate('Target rotation'), VARIABLETYPE_INTEGER, 'WaremaWMS.Rotation', $vpos++, $options['rotation_slider']);
+        if ($options['rotation_slider']) {
+            $this->MaintainAction('TargetRotation', true);
+        }
+
+        $this->MaintainVariable('Brightness', $this->Translate('Brightness'), VARIABLETYPE_INTEGER, 'WaremaWMS.Percentage', $vpos++, $options['brightness_slider']);
+        if ($options['brightness_slider']) {
+            $this->MaintainAction('Brightness', true);
+        }
+
+        $this->MaintainVariable('Power', $this->Translate('Power'), VARIABLETYPE_INTEGER, 'WaremaWMS.Percentage', $vpos++, $options['power_slider']);
+        if ($options['power_slider']) {
+            $this->MaintainAction('Power', true);
+        }
+
+        $has_control = false;
+        if ($options['control_extend_retract']) {
+            $this->MaintainVariable('Control', $this->Translate('Control'), VARIABLETYPE_INTEGER, 'WaremaWMS.ControlExtendRetract', $vpos++, true);
+            $has_control = true;
+        }
+        if ($options['control_up_down']) {
+            $this->MaintainVariable('Control', $this->Translate('Control'), VARIABLETYPE_INTEGER, 'WaremaWMS.ControlUpDown', $vpos++, true);
+            $has_control = true;
+        }
+        if ($options['control_open_close']) {
+            $this->MaintainVariable('Control', $this->Translate('Control'), VARIABLETYPE_INTEGER, 'WaremaWMS.ControlOpenClose', $vpos++, true);
+            $has_control = true;
+        }
+        if ($has_control) {
             $this->MaintainAction('Control', true);
         } else {
             $this->UnregisterVariable('Control');
+        }
+
+        $this->MaintainVariable('Switch', $this->Translate('Switch'), VARIABLETYPE_BOOLEAN, '~Switch', $vpos++, $options['control_switch']);
+        if ($options['control_switch']) {
+            $this->MaintainAction('Switch', true);
         }
 
         $this->MaintainVariable('Activity', $this->Translate('Activity'), VARIABLETYPE_INTEGER, 'WaremaWMS.Activity', $vpos++, $options['activity']);
@@ -197,16 +327,26 @@ class WaremaWMSDevice extends IPSModule
             'items'   => [
                 [
                     'type'    => 'NumberSpinner',
+                    'enabled' => false,
                     'name'    => 'room_id',
                     'caption' => 'Room ID'
                 ],
                 [
                     'type'    => 'NumberSpinner',
+                    'enabled' => false,
                     'name'    => 'channel_id',
                     'caption' => 'Channel ID'
                 ],
                 [
                     'type'     => 'Select',
+                    'enabled'  => false,
+                    'options'  => $this->InterfaceAsOptions(),
+                    'name'     => 'interface',
+                    'caption'  => 'WMS interface'
+                ],
+                [
+                    'type'     => 'Select',
+                    'enabled'  => false,
                     'options'  => $this->ProductAsOptions(),
                     'name'     => 'product',
                     'caption'  => 'Product'
@@ -310,6 +450,16 @@ class WaremaWMSDevice extends IPSModule
             case 'TargetPosition':
                 $r = $this->SendPosition($value);
                 break;
+            case 'TargetRotation':
+                $r = $this->SendRotation($value);
+                break;
+            case 'Switch':
+                $r = $this->SendSwitch((bool) $value);
+                break;
+            case 'Brightness':
+            case 'Power':
+                $r = $this->SendDim($value);
+                break;
             case 'UpdateStatus':
                 $this->UpdateStatus();
                 break;
@@ -348,29 +498,79 @@ class WaremaWMSDevice extends IPSModule
             return;
         }
 
-        $ret = $this->QueryPosition();
-
-        $this->SetValue('State', $ret['State']);
-
         $tmout = null;
 
-        if ($ret['State'] == self::$STATE_OK) {
-            if (isset($ret['Data']['position'])) {
-                $this->SetValue('Position', $ret['Data']['position']);
-            }
-            if (isset($ret['Data']['fahrt'])) {
-                if (boolval($ret['Data']['fahrt'])) {
-                    $activity = self::$ACTIVITY_MOVES;
-                    $tmout = 0.25;
-                } else {
-                    $activity = self::$ACTIVITY_STAND;
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            $ret = $this->QueryDeviceStatus();
+
+            $this->SetValue('State', $ret['State']);
+
+            if ($ret['State'] == self::$STATE_OK) {
+                if (isset($ret['Data']['position'])) {
+                    $this->SetValue('Position', $ret['Data']['position']);
                 }
-                $this->SetValue('Activity', $activity);
-            }
-            if ($this->GetValue('Activity') == self::$ACTIVITY_STAND) {
-                $this->SetValue('TargetPosition', $this->GetValue('TargetPosition'));
+                if (isset($ret['Data']['fahrt'])) {
+                    if (boolval($ret['Data']['fahrt'])) {
+                        $activity = self::$ACTIVITY_MOVES;
+                        $tmout = 0.25;
+                    } else {
+                        $activity = self::$ACTIVITY_STAND;
+                    }
+                    $this->SetValue('Activity', $activity);
+                }
+                if ($this->GetValue('Activity') == self::$ACTIVITY_STAND) {
+                    $this->SetValue('TargetPosition', $this->GetValue('Position'));
+                }
             }
         }
+
+        if ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $product = $this->ReadPropertyInteger('product');
+            $options = $this->product2options($product);
+            $ret = $this->QueryDeviceStatus();
+
+            $this->SetValue('State', $ret['State']);
+
+            if ($ret['State'] == self::$STATE_OK) {
+                if (isset($ret['Data']['data']['drivingCause'])) {
+                    $drivingCause = $ret['Data']['data']['drivingCause'];
+                    if ($drivingCause == self::$DRIVING_CLAUSE_NONE) {
+                        $activity = self::$ACTIVITY_STAND;
+                    } else {
+                        $activity = self::$ACTIVITY_MOVES;
+                        $tmout = 0.25;
+                    }
+                    $this->SetValue('Activity', $activity);
+                }
+                if (isset($ret['Data']['data']['productData'])) {
+                    $productDatas = $ret['Data']['data']['productData'];
+                    foreach ($productDatas as $productData) {
+                        if ($options['position_slider']) {
+                            if (isset($productData['value']['percentage'])) {
+                                $this->SetValue('Position', $productData['value']['percentage']);
+                                break;
+                            }
+                        }
+                        if ($options['rotation_slider']) {
+                            if (isset($productData['value']['rotation'])) {
+                                $this->SetValue('Rotation', $productData['value']['rotation']);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if ($this->GetValue('Activity') == self::$ACTIVITY_STAND) {
+                    if ($options['position_slider']) {
+                        $this->SetValue('TargetPosition', $this->GetValue('Position'));
+                    }
+                    if ($options['rotation_slider']) {
+                        $this->SetValue('TargetRotation', $this->GetValue('Rotation'));
+                    }
+                }
+            }
+        }
+
         $this->SetValue('LastStatus', time());
 
         $this->SetUpdateInterval($tmout);
@@ -391,21 +591,46 @@ class WaremaWMSDevice extends IPSModule
     {
         $this->SendDebug(__FUNCTION__, '', 0);
 
-        $room_id = $this->ReadPropertyInteger('room_id');
-        $channel_id = $this->ReadPropertyInteger('channel_id');
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            $room_id = $this->ReadPropertyInteger('room_id');
+            $channel_id = $this->ReadPropertyInteger('channel_id');
 
-        $data = [
-            'room_id'    => $room_id,
-            'channel_id' => $channel_id,
-        ];
-        $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
-            $state = self::$STATE_WIND_ALARM;
-        } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
-            $state = self::$STATE_RAIN_ALARM;
-        } else {
+            $data = [
+                'room_id'    => $room_id,
+                'channel_id' => $channel_id,
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+            if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
+                $state = self::$STATE_WIND_ALARM;
+            } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
+                $state = self::$STATE_RAIN_ALARM;
+            } else {
+                $state = $ret['State'];
+            }
+            $this->SetValue('State', $state);
+        } elseif ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $action = $this->actionType2action(self::$ACTION_TYPE_STOP);
+            if ($action === false) {
+                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_STOP) . '" for product ' . $this->DecodeProduct($product), 0);
+                return false;
+            }
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+            $data = [
+                'actions' => [
+                    [
+                        'destinationId' => $channel_id,
+                        'actionId'      => $action['id'],
+                    ]
+                ],
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
             $state = $ret['State'];
+            $this->SetValue('State', $state);
+        } else {
+            $state = self::$STATE_ERROR;
         }
+
         $this->SetValue('State', $state);
         return $state == self::$STATE_OK;
     }
@@ -414,21 +639,51 @@ class WaremaWMSDevice extends IPSModule
     {
         $this->SendDebug(__FUNCTION__, '', 0);
 
-        $room_id = $this->ReadPropertyInteger('room_id');
-        $channel_id = $this->ReadPropertyInteger('channel_id');
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            $room_id = $this->ReadPropertyInteger('room_id');
+            $channel_id = $this->ReadPropertyInteger('channel_id');
 
-        $data = [
-            'room_id'    => $room_id,
-            'channel_id' => $channel_id,
-        ];
-        $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
-            $state = self::$STATE_WIND_ALARM;
-        } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
-            $state = self::$STATE_RAIN_ALARM;
-        } else {
+            $data = [
+                'room_id'    => $room_id,
+                'channel_id' => $channel_id,
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+            if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
+                $state = self::$STATE_WIND_ALARM;
+            } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
+                $state = self::$STATE_RAIN_ALARM;
+            } else {
+                $state = $ret['State'];
+            }
+            $this->SetValue('State', $state);
+        } elseif ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $action = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
+            if ($action === false) {
+                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_PERCENTAGE) . '" for product ' . $this->DecodeProduct($product), 0);
+                return false;
+            }
+            $position = isset($action['minValue']) ? $action['minValue'] : 0;
+
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+            $data = [
+                'actions' => [
+                    [
+                        'destinationId' => $channel_id,
+                        'actionId'      => $action['id'],
+                        'parameters'    => [
+                            'percentage' => $position,
+                        ],
+                    ]
+                ],
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
             $state = $ret['State'];
+            $this->SetValue('State', $state);
+        } else {
+            $state = self::$STATE_ERROR;
         }
+
         $this->SetValue('State', $state);
         return $state == self::$STATE_OK;
     }
@@ -437,22 +692,51 @@ class WaremaWMSDevice extends IPSModule
     {
         $this->SendDebug(__FUNCTION__, '', 0);
 
-        $room_id = $this->ReadPropertyInteger('room_id');
-        $channel_id = $this->ReadPropertyInteger('channel_id');
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            $room_id = $this->ReadPropertyInteger('room_id');
+            $channel_id = $this->ReadPropertyInteger('channel_id');
 
-        $data = [
-            'room_id'    => $room_id,
-            'channel_id' => $channel_id,
-        ];
-        $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
-            $state = self::$STATE_WIND_ALARM;
-        } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
-            $state = self::$STATE_RAIN_ALARM;
-        } else {
+            $data = [
+                'room_id'    => $room_id,
+                'channel_id' => $channel_id,
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+            if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
+                $state = self::$STATE_WIND_ALARM;
+            } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
+                $state = self::$STATE_RAIN_ALARM;
+            } else {
+                $state = $ret['State'];
+            }
+            $this->SetValue('State', $state);
+        } elseif ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $action = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
+            if ($action === false) {
+                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_PERCENTAGE) . '" for product ' . $this->DecodeProduct($product), 0);
+                return false;
+            }
+            $position = isset($action['maxValue']) ? $action['maxValue'] : 100;
+
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+            $data = [
+                'actions' => [
+                    [
+                        'destinationId' => $channel_id,
+                        'actionId'      => $action['id'],
+                        'parameters'    => [
+                            'percentage' => $position,
+                        ],
+                    ]
+                ],
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
             $state = $ret['State'];
+            $this->SetValue('State', $state);
+        } else {
+            $state = self::$STATE_ERROR;
         }
-        $this->SetValue('State', $state);
+
         return $state == self::$STATE_OK;
     }
 
@@ -460,36 +744,202 @@ class WaremaWMSDevice extends IPSModule
     {
         $this->SendDebug(__FUNCTION__, 'position=' . $position, 0);
 
-        $room_id = $this->ReadPropertyInteger('room_id');
-        $channel_id = $this->ReadPropertyInteger('channel_id');
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            $room_id = $this->ReadPropertyInteger('room_id');
+            $channel_id = $this->ReadPropertyInteger('channel_id');
 
-        $data = [
-            'room_id'    => $room_id,
-            'channel_id' => $channel_id,
-            'position'   => $position,
-        ];
-        $ret = $this->SendDataToIO(__FUNCTION__, $data);
-        if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
-            $state = self::$STATE_WIND_ALARM;
-        } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
-            $state = self::$STATE_RAIN_ALARM;
-        } else {
+            $data = [
+                'room_id'    => $room_id,
+                'channel_id' => $channel_id,
+                'position'   => $position,
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+            if (isset($ret['Data']['wind']) && $ret['Data']['wind']) {
+                $state = self::$STATE_WIND_ALARM;
+            } elseif (isset($ret['Data']['rain']) && $ret['Data']['rain']) {
+                $state = self::$STATE_RAIN_ALARM;
+            } else {
+                $state = $ret['State'];
+            }
+            $this->SetValue('State', $state);
+        } elseif ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $action = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
+            if ($action === false) {
+                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_PERCENTAGE) . '" for product ' . $this->DecodeProduct($product), 0);
+                return false;
+            }
+            if (isset($action['minValue']) && $position < $action['minValue']) {
+                $position = $action['minValue'];
+            }
+            if (isset($action['maxValue']) && $position > $action['maxValue']) {
+                $position = $action['maxValue'];
+            }
+
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+            $data = [
+                'actions' => [
+                    [
+                        'destinationId' => $channel_id,
+                        'actionId'      => $action['id'],
+                        'parameters'    => [
+                            'percentage' => $position,
+                        ],
+                    ]
+                ],
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
             $state = $ret['State'];
+            $this->SetValue('State', $state);
+        } else {
+            $state = self::$STATE_ERROR;
         }
-        $this->SetValue('State', $state);
+
         return $state == self::$STATE_OK;
     }
 
-    public function QueryPosition()
+    public function SendRotation(int $rotation)
     {
-        $room_id = $this->ReadPropertyInteger('room_id');
-        $channel_id = $this->ReadPropertyInteger('channel_id');
+        $this->SendDebug(__FUNCTION__, 'rotation=' . $rotation, 0);
 
-        $data = [
-            'room_id'    => $room_id,
-            'channel_id' => $channel_id,
-        ];
-        $ret = $this->SendDataToIO(__FUNCTION__, $data);
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $product = $this->ReadPropertyInteger('product');
+            $action = $this->actionType2action(self::$ACTION_TYPE_ROTATION);
+            if ($action === false) {
+                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_ROTATION) . '" for product ' . $this->DecodeProduct($product), 0);
+                return false;
+            }
+            if (isset($action['minValue']) && $rotation < $action['minValue']) {
+                $rotation = $action['minValue'];
+            }
+            if (isset($action['maxValue']) && $rotation > $action['maxValue']) {
+                $rotation = $action['maxValue'];
+            }
+
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+            $data = [
+                'actions' => [
+                    [
+                        'destinationId' => $channel_id,
+                        'actionId'      => $action['id'],
+                        'parameters'    => [
+                            'rotation' => $rotation,
+                        ],
+                    ]
+                ],
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+            $state = $ret['State'];
+            $this->SetValue('State', $state);
+        } else {
+            $state = self::$STATE_ERROR;
+        }
+
+        return $state == self::$STATE_OK;
+    }
+
+    public function SendSwitch(bool $state)
+    {
+        $this->SendDebug(__FUNCTION__, 'state=' . $this->bool2str($state), 0);
+
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $product = $this->ReadPropertyInteger('product');
+            $action = $this->actionType2action(self::$ACTION_TYPE_SWITCH);
+            if ($action === false) {
+                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_SWITCH) . '" for product ' . $this->DecodeProduct($product), 0);
+                return false;
+            }
+
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+            $data = [
+                'actions' => [
+                    [
+                        'destinationId' => $channel_id,
+                        'actionId'      => $action['id'],
+                        'parameters'    => [
+                            'onOffState' => $state,
+                        ],
+                    ]
+                ],
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+            $state = $ret['State'];
+            $this->SetValue('State', $state);
+        } else {
+            $state = self::$STATE_ERROR;
+        }
+
+        return $state == self::$STATE_OK;
+    }
+
+    public function SendDim(int $level)
+    {
+        $this->SendDebug(__FUNCTION__, 'level=' . $level, 0);
+
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $product = $this->ReadPropertyInteger('product');
+            $action = $this->actionType2action(self::$ACTION_TYPE_SWITCH);
+            if ($action === false) {
+                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_SWITCH) . '" for product ' . $this->DecodeProduct($product), 0);
+                return false;
+            }
+            if (isset($action['minValue']) && $level < $action['minValue']) {
+                $level = $action['minValue'];
+            }
+            if (isset($action['maxValue']) && $level > $action['maxValue']) {
+                $level = $action['maxValue'];
+            }
+
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+            $data = [
+                'actions' => [
+                    [
+                        'destinationId' => $channel_id,
+                        'actionId'      => $action['id'],
+                        'parameters'    => [
+                            'percentage' => $level,
+                        ],
+                    ]
+                ],
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+
+            $state = $ret['State'];
+            $this->SetValue('State', $state);
+        } else {
+            $state = self::$STATE_ERROR;
+        }
+
+        return $state == self::$STATE_OK;
+    }
+
+    public function QueryDeviceStatus()
+    {
+        $this->SendDebug(__FUNCTION__, '', 0);
+
+        $interface = $this->ReadPropertyInteger('interface');
+        if ($interface == self::$INTERFACE_WEBCONTROL) {
+            $room_id = $this->ReadPropertyInteger('room_id');
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+
+            $data = [
+                'room_id'    => $room_id,
+                'channel_id' => $channel_id,
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+        } elseif ($interface == self::$INTERFACE_WEBCONTROLPRO) {
+            $channel_id = $this->ReadPropertyInteger('channel_id');
+
+            $data = [
+                'channel_id' => $channel_id,
+            ];
+            $ret = $this->SendDataToIO(__FUNCTION__, $data);
+        } else {
+            $ret = false;
+        }
         return $ret;
     }
 }

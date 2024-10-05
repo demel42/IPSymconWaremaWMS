@@ -14,7 +14,7 @@ class WaremaWMSConfig extends IPSModule
     {
         parent::__construct($InstanceID);
 
-        $this->CommonContruct(__DIR__);
+        $this->CommonConstruct(__DIR__);
     }
 
     public function __destruct()
@@ -104,6 +104,8 @@ class WaremaWMSConfig extends IPSModule
                 $channel_name = $device['channel_name'];
                 $product = (int) $device['product'];
                 $product_name = $this->DecodeProduct($product);
+                $interface = $device['interface'];
+                $actions = $device['actions'];
 
                 $instanceID = 0;
                 foreach ($instIDs as $instID) {
@@ -130,11 +132,13 @@ class WaremaWMSConfig extends IPSModule
                         [
                             'moduleID'      => $guid,
                             'location'      => $location,
-                            'info'          => 'Warema WMS ' . $product,
+                            'info'          => 'Warema WMS ' . $product_name,
                             'configuration' => [
                                 'room_id'    => $room_id,
                                 'channel_id' => $channel_id,
+                                'interface'  => $interface,
                                 'product'    => $product,
+                                'actions'    => $actions,
                             ]
                         ],
                     ],
@@ -200,6 +204,7 @@ class WaremaWMSConfig extends IPSModule
 
         $entries = $this->getConfiguratorValues();
         $formElements[] = [
+            'name'    => 'devices',
             'type'    => 'Configurator',
             'caption' => 'Devices',
 
