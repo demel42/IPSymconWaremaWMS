@@ -122,6 +122,7 @@ trait WaremaWMSLocalLib
         $this->CreateVarProfile('WaremaWMS.Activity', VARIABLETYPE_INTEGER, '', 0, 0, 0, 0, '', $associations, $reInstall);
 
         $this->CreateVarProfile('WaremaWMS.Position', VARIABLETYPE_INTEGER, ' %', 0, 100, 1, 0, 'Intensity', [], $reInstall);
+        $this->CreateVarProfile('WaremaWMS.Percentage', VARIABLETYPE_INTEGER, ' %', 0, 100, 1, 0, 'Intensity', [], $reInstall);
 
         $this->CreateVarProfile('WaremaWMS.Rotation', VARIABLETYPE_INTEGER, ' °', -127, 127, 1, 0, 'Intensity', [], $reInstall);
     }

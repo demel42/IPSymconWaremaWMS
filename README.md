@@ -133,7 +133,7 @@ GUIDs
 
 ## 7. Versions-Historie
 
-- 2.0 @ 21.10.2024 19:30
+- 2.0 @ 21.10.2024 19:51
   - Verbesserung: Integration des WebControl Pro
   - update submodule CommonStubs
 
