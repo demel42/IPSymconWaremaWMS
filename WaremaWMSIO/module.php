@@ -1570,7 +1570,7 @@ class WaremaWMSIO extends IPSModule
             if ($i++ == self::$WCP_RETRY_COUNT) {
                 break;
             }
-            $this->SendDebug(__FUNCTION__, 'channel unreachable, sleep ' . self::$WCP_RETRY_DELAY . ' until retry #' . $i, 0);
+            $this->SendDebug(__FUNCTION__, 'channel unreachable, sleeping ' . self::$WCP_RETRY_DELAY . 'ms before retry #' . $i, 0);
             IPS_Sleep(self::$WCP_RETRY_DELAY);
         }
 

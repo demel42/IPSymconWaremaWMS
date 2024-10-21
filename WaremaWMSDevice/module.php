@@ -195,10 +195,10 @@ class WaremaWMSDevice extends IPSModule
                     $options['control_switch'] = true;
                     $action_percentage = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
                     if ($action_percentage !== false) {
-                        if ($action_percentage['actionDescription'] == $ACTION_DESC_LIGHT_DIMMING) {
+                        if ($action_percentage['actionDescription'] == self::$ACTION_DESC_LIGHT_DIMMING) {
                             $options['brightness_slider'] = true;
                         }
-                        if ($action_percentage['actionDescription'] == $ACTION_DESC_LOAD_DIMMING) {
+                        if ($action_percentage['actionDescription'] == self::$ACTION_DESC_LOAD_DIMMING) {
                             $options['power_slider'] = true;
                         }
                     }
