@@ -396,6 +396,11 @@ class WaremaWMSDevice extends IPSModule
             'caption'   => 'Expert area',
             'expanded'  => false,
             'items'     => [
+                [
+                    'type'    => 'Button',
+                    'caption' => 'Show configuration',
+                    'onClick' => 'IPS_RequestAction(' . $this->InstanceID . ', "SHowConfiguration", "");',
+                ],
                 $this->GetInstallVarProfilesFormItem(),
             ],
         ];
@@ -463,6 +468,9 @@ class WaremaWMSDevice extends IPSModule
             case 'UpdateStatus':
                 $this->UpdateStatus();
                 break;
+            case 'SHowConfiguration':
+                $this->SHowConfiguration();
+                break;
             default:
                 $this->SendDebug(__FUNCTION__, 'invalid ident ' . $ident, 0);
                 break;
@@ -480,6 +488,54 @@ class WaremaWMSDevice extends IPSModule
         }
         $msec = $sec > 0 ? $sec * 1000 : 0;
         $this->MaintainTimer('UpdateStatus', (int) $msec);
+    }
+
+    private function ShowConfiguration()
+    {
+        $interface = $this->ReadPropertyInteger('interface');
+        switch ($interface) {
+            case self::$INTERFACE_WEBCONTROL:
+                break;
+            case self::$INTERFACE_WEBCONTROLPRO:
+                $s = '';
+
+                $product = $this->ReadPropertyInteger('product');
+                $this->SendDebug(__FUNCTION__, 'product=' . $this->DecodeProduct($product) . '(' . $product . ')', 0);
+                $s .= $this->Translate('Product') . ': ' . $this->DecodeProduct($product) . '(' . $product . ')' . PHP_EOL;
+
+                $actions = @json_decode((string) $this->ReadPropertyString('actions'), true);
+                $this->SendDebug(__FUNCTION__, 'actions=' . print_r($actions, true), 0);
+
+                $s .= $this->Translate('Actions') . ': ' . PHP_EOL;
+                foreach ($actions as $action) {
+                    $r = 'id=' . $action['id'];
+
+                    $r .= ', type=' . $this->DecodeActionType($action['actionType']) . '(' . $action['actionType'] . ')';
+                    $r .= ', desc=' . $this->DecodeActionDesc($action['actionDescription']) . '(' . $action['actionDescription'] . ')';
+
+                    if (isset($action['minValue'])) {
+                        $r .= ', min=' . $action['minValue'];
+                    }
+                    if (isset($action['maxValue'])) {
+                        $r .= ', max=' . $action['maxValue'];
+                    }
+
+                    $s .= ' - ' . $r . PHP_EOL;
+                }
+
+                $options = $this->product2options($product);
+                $this->SendDebug(__FUNCTION__, 'options=' . print_r($options, true), 0);
+                $v = [];
+                foreach ($options as $key => $val) {
+                    if ($val) {
+                        $v[] = $key;
+                    }
+                }
+                $s .= $this->Translate('Options') . ': ' . implode(', ', $v) . PHP_EOL;
+
+                $this->PopupMessage($s);
+                break;
+        }
     }
 
     private function UpdateStatus()
@@ -533,15 +589,17 @@ class WaremaWMSDevice extends IPSModule
             $this->SetValue('State', $ret['State']);
 
             if ($ret['State'] == self::$STATE_OK) {
-                if (isset($ret['Data']['data']['drivingCause'])) {
-                    $drivingCause = $ret['Data']['data']['drivingCause'];
-                    if ($drivingCause == self::$DRIVING_CLAUSE_NONE) {
-                        $activity = self::$ACTIVITY_STAND;
-                    } else {
-                        $activity = self::$ACTIVITY_MOVES;
-                        $tmout = 0.25;
+                if ($options['activity']) {
+                    if (isset($ret['Data']['data']['drivingCause'])) {
+                        $drivingCause = $ret['Data']['data']['drivingCause'];
+                        if ($drivingCause == self::$DRIVING_CLAUSE_NONE) {
+                            $activity = self::$ACTIVITY_STAND;
+                        } else {
+                            $activity = self::$ACTIVITY_MOVES;
+                            $tmout = 0.25;
+                        }
+                        $this->SetValue('Activity', $activity);
                     }
-                    $this->SetValue('Activity', $activity);
                 }
                 if (isset($ret['Data']['data']['productData'])) {
                     $productDatas = $ret['Data']['data']['productData'];
@@ -560,12 +618,14 @@ class WaremaWMSDevice extends IPSModule
                         }
                     }
                 }
-                if ($this->GetValue('Activity') == self::$ACTIVITY_STAND) {
-                    if ($options['position_slider']) {
-                        $this->SetValue('TargetPosition', $this->GetValue('Position'));
-                    }
-                    if ($options['rotation_slider']) {
-                        $this->SetValue('TargetRotation', $this->GetValue('Rotation'));
+                if ($options['activity']) {
+                    if ($this->GetValue('Activity') == self::$ACTIVITY_STAND) {
+                        if ($options['position_slider']) {
+                            $this->SetValue('TargetPosition', $this->GetValue('Position'));
+                        }
+                        if ($options['rotation_slider']) {
+                            $this->SetValue('TargetRotation', $this->GetValue('Rotation'));
+                        }
                     }
                 }
             }
@@ -881,9 +941,9 @@ class WaremaWMSDevice extends IPSModule
         $interface = $this->ReadPropertyInteger('interface');
         if ($interface == self::$INTERFACE_WEBCONTROLPRO) {
             $product = $this->ReadPropertyInteger('product');
-            $action = $this->actionType2action(self::$ACTION_TYPE_SWITCH);
+            $action = $this->actionType2action(self::$ACTION_TYPE_PERCENTAGE);
             if ($action === false) {
-                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_SWITCH) . '" for product ' . $this->DecodeProduct($product), 0);
+                $this->SendDebug(__FUNCTION__, 'no action "' . $this->DecodeActionType(self::$ACTION_TYPE_PERCENTAGE) . '" for product ' . $this->DecodeProduct($product), 0);
                 return false;
             }
             if (isset($action['minValue']) && $level < $action['minValue']) {

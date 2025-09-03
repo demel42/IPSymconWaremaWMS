@@ -640,7 +640,7 @@ class WaremaWMSIO extends IPSModule
                 default:
                     $this->SendDebug(__FUNCTION__, 'unknown function "' . $jdata['Function'] . '"', 0);
                     break;
-                }
+            }
         } else {
             $this->SendDebug(__FUNCTION__, 'unknown message-structure', 0);
         }
