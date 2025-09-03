@@ -135,7 +135,7 @@ GUIDs
 
 - 2.2 @ 03.09.2025 10:20
   - Fix: Behandlung von Dimmer
-  - Ergänzung: Funktion zur Akzeige der Konfiguration eines Gerätes
+  - Neu: Funktion zur Anzeige der Konfiguration eines Gerätes
 
 - 2.1 @ 02.01.2025 14:28
   - Fix: Link zur Dokumentation korrigiert
